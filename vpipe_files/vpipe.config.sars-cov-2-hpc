@@ -1,0 +1,20 @@
+[input]
+samples_file = samples.tsv
+reference = references/NC_045512.2.fasta
+fastq_suffix =
+trim_percent_cutoff = 0.5
+
+[output]
+snv = True
+local = False
+global = False
+
+[general]
+aligner = bwa
+snv_caller = lofreq
+
+[bwa_align]
+threads=24
+
+[snv]
+consensus=false

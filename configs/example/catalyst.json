@@ -1,0 +1,8 @@
+{
+    "input_dirs": "input/",
+    "output_dirs": "output/",
+    "partition": "pbatch",
+    "bank": "cv19-a02",
+    "nnodes": 2,
+    "read_length": 130
+}

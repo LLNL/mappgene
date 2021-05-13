@@ -1,0 +1,36 @@
+Bootstrap: docker
+From: ubuntu:18.04
+
+%post
+    MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    SNPEFF=https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip
+
+    apt-get -y update
+    apt-get install -y wget locales git bash vim-tiny default-jre unzip perl
+    locale-gen en_US.UTF-8
+    rm /bin/sh
+    ln -s /bin/bash /bin/sh
+    wget --no-check-certificate $MINICONDA
+    sh Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+    PATH=$PATH:/opt/miniconda/bin
+    conda init bash
+    conda create -n V-pipe -c conda-forge -c bioconda python=3.8 snakemake-minimal=5.14.0
+    git clone https://github.com/cbg-ethz/V-pipe.git /opt/vpipe
+    git clone https://github.com/BioInfoTools/BBMap.git /opt/bbmap
+    wget --no-check-certificate $SNPEFF
+    unzip snpEff_latest_core.zip -d /opt
+    java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
+
+%environment
+    __conda_setup="$('/opt/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+    if [ $? -eq 0 ]; then
+        eval "$__conda_setup"
+    else
+        if [ -f "/opt/miniconda/etc/profile.d/conda.sh" ]; then
+            . "/opt/miniconda/etc/profile.d/conda.sh"
+        else
+            export PATH="/opt/miniconda/bin:$PATH"
+        fi
+    fi
+    unset __conda_setup
+    conda activate V-pipe

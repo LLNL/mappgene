@@ -1,0 +1,17 @@
+.*
+*.stdout
+*.json
+!configs/example/*.json
+*.qsub
+*.core
+*.out
+*.pyc
+output/
+runinfo/
+tmp/
+cmd_parsl.auto*
+!.gitignore
+!.gitattributes
+
+input/*
+!input/example
