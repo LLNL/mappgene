@@ -50,9 +50,10 @@ parse_default('read_length', 250, args, pending_args)
 if __name__ == '__main__':
 
     # Setup V-pipe repo
-    smart_remove('tmp')
-    smart_mkdir('tmp')
-    git_dir = join('tmp', 'vpipe')
+    tmp_dir = abspath('tmp')
+    smart_remove(tmp_dir)
+    smart_mkdir(tmp_dir)
+    git_dir = join(tmp_dir, 'vpipe')
     git_params = {'sdir':git_dir, 'container':args.container}
     # run(f'git clone https://github.com/cbg-ethz/V-pipe.git {git_dir}', git_params)
     run(f'cp -rf /opt/vpipe {git_dir}', git_params)

@@ -15,3 +15,5 @@ cmd_parsl.auto*
 
 input/*
 !input/example
+
+*.sif

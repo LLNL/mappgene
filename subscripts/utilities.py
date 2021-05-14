@@ -381,6 +381,10 @@ def validate(file, params={}):
     assert is_float(mean), "Invalid mean value in {}".format(file)
     assert float(mean) != 0, "Zero mean value in {}".format(file)
 
+def append_to_filename(filename, append_string):
+    name, ext = os.path.splitext(filename)
+    return "{}_{}{}".format(name, append_string, ext)
+
 def deinterlace(sequence_file, forward_file, reverse_file):
 
     if sequence_file.endswith('.gz'):
