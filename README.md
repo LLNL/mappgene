@@ -6,9 +6,10 @@ Mappgene is a genomic sequence analysis workflow designed for high-performance c
 
 ```
 pip3 install --user parsl
-git lfs install
 git clone https://github.com/LLNL/mappgene.git
 ```
+
+Download the Singularity image (https://drive.google.com/file/d/1r_IR-jWG3FGVmLpD0A2SqjOPY8rYw1Wk/view?usp=sharing) and place it at `container/image.sif`.
 
 ## Running
 
