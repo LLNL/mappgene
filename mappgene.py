@@ -93,7 +93,7 @@ if __name__ == '__main__':
     def run_worker(input_dir, output_dir, params):
         import math,multiprocessing,glob,time,csv
         from os.path import basename,join
-        from subscripts.utilities import smart_copy,smart_mkdir,run
+        from subscripts.utilities import smart_copy,smart_mkdir,smart_remove,run
 
         # Setup parameters and input data
         work_dir = join(output_dir, 'work_dir')
@@ -119,7 +119,6 @@ if __name__ == '__main__':
         else:
             for f in inputs:
                 smart_copy(f, join(work_input_dir, basename(f)))
-        return
 
         # Update sample.tsv with read length
         run(f'sh -c "cd {work_dir} && ./vpipe --dryrun"', params)
