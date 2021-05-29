@@ -66,7 +66,7 @@ def run(command, params=None, ignore_errors=False, print_output=True, print_time
     if container is not None:
         odir = split(sdir)[0]
         command = command.replace(odir, "/mnt")
-        command = "singularity exec{} -B {}:/mnt {} {}".format(" --nv" if use_gpu else "", odir, container, command)
+        command = 'singularity exec{} -B {}:/mnt {} sh -c "{}"'.format(" --nv" if use_gpu else "", odir, container, command)
         print(command)
         if container_cwd:
             command = "cd {}; {}".format(container_cwd, command)

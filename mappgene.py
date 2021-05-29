@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # run(f'git clone https://github.com/cbg-ethz/V-pipe.git {git_dir}', git_params)
     run(f'cp -rf /opt/vpipe {git_dir}', git_params)
     copy_tree('vpipe_files', join(git_dir))
-    run(f'sh -c "cd {git_dir} && sh init_project.sh" || true', git_params)
+    run(f'cd {git_dir} && sh init_project.sh || true', git_params)
 
     if args.local:
         executor = ThreadPoolExecutor(label="worker")
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     @python_app(executors=['worker'], cache=True)
     def run_worker(input_dir, output_dir, params):
-        import math,multiprocessing,glob,time,csv
+        import math,multiprocessing,glob,time,csv,os
         from os.path import basename,join
         from subscripts.utilities import smart_copy,smart_mkdir,smart_remove,run
 
@@ -104,7 +104,17 @@ if __name__ == '__main__':
         inputs = glob.glob(join(input_dir, '*.fastq.gz'))
         work_input_dir = join(work_dir, 'samples/a/b/raw_data')
 
-        # # Deinterleave if only a single FASTQ is found
+        # Run fixq.sh
+        for f in inputs:
+            work_f = join(work_input_dir, basename(f))
+            work_f2 = join(work_input_dir, 'tmp_' + basename(f))
+            smart_copy(f, work_f)
+            run(f'zcat {work_f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' + 
+                f' | gzip -c > {work_f2}', params)
+            smart_remove(work_f)
+            os.rename(work_f2, work_f)
+
+        # Deinterleave if only a single FASTQ was found
         if len(inputs) == 1:
             f = inputs[0]
             work_f = join(work_input_dir, basename(f))
@@ -112,16 +122,12 @@ if __name__ == '__main__':
             work_r2 = join(work_input_dir, basename(f).replace('.fastq.gz', '_R2.fastq.gz'))
             work_stat = join(work_input_dir, basename(f).replace('.fastq.gz', '.stat'))
             fasta = join(work_dir, 'references/PS_1200bp.fasta')
-            smart_copy(f, work_f)
             run(f"bbduk.sh in={work_f} out1={work_r1} out2={work_r2} ref={fasta} stats={work_stat} " +
                 "k=13 ktrim=l hdist=0 restrictleft=31 statscolumns=5", params)
             smart_remove(work_f)
-        else:
-            for f in inputs:
-                smart_copy(f, join(work_input_dir, basename(f)))
-
+        
         # Update sample.tsv with read length
-        run(f'sh -c "cd {work_dir} && ./vpipe --dryrun"', params)
+        run(f'cd {work_dir} && ./vpipe --dryrun', params)
         samples_tsv = join(work_dir, 'samples.tsv')
         with open(samples_tsv, 'r') as fr, open(f'{samples_tsv}.tmp', 'w') as fw:
             r = csv.reader(fr, delimiter='\t')
@@ -133,7 +139,7 @@ if __name__ == '__main__':
 
         # Run V-pipe analysis
         ncores = int(math.floor(multiprocessing.cpu_count() / 2))
-        run(f'sh -c "cd {work_dir} && ./vpipe --cores {ncores} --use-conda"', params)
+        run(f'cd {work_dir} && ./vpipe --cores {ncores} --use-conda', params)
         time.sleep(10)
 
         smart_copy('/usr/WS2/moon15/old/mappgene/output/example/work_dir/samples',
@@ -143,12 +149,12 @@ if __name__ == '__main__':
         vcf_s2 = join(work_dir, 'samples/a/b/variants/SNVs/snvs_NC_045512.2.snpEFF.vcf')
         vcf_s3 = join(work_dir, 'samples/a/b/variants/SNVs/snvs_NC_045512.2.snpSIFT.txt')
 
-        run(f'sh -c "sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}"', params)
+        run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
         # run('java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2', params)
-        run(f'sh -c "java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}"', params)
-        run(f'sh -c "cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' + 
+        run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
+        run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' + 
             f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' + 
-            f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}"', params)
+            f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
 
         smart_copy(join(work_dir, 'samples/a/b/alignments'), join(output_dir, 'alignments'))
         smart_copy(join(work_dir, 'samples/a/b/variants'), join(output_dir, 'variants'))
