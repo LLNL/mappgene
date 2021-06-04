@@ -21,8 +21,10 @@ else:
     parser = argparse.ArgumentParser(description='Generate connectome and edge density images',
         usage=""" """)
 
-    parser.add_argument('--input_dirs', '-i', help='Path to inputs. Subdirectories must contain subject genomes in FASTQ format.')
-    parser.add_argument('--output_dirs', '-o', help='Path to outputs.')
+    input_group = parser.add_mutually_exclusive_group()
+    input_group.add_argument('--input_list', '-i', help='Path to JSON file specifying input FASTQ paths.')
+    input_group.add_argument('--input_dirs', '-i', help='Path to directory with subdirectories containing FASTQ.')
+    parser.add_argument('--output_dirs', '-o', help='Path to directory with outputs.')
     parser.add_argument('--nnodes', '-n', help='Number of nodes.')
     parser.add_argument('--local', help='Run only on local threads (for debugging).', action='store_true')
     parser.add_argument('--bank', '-b', help='Bank to charge for jobs.')
@@ -30,12 +32,13 @@ else:
     parser.add_argument('--force', '-f', help='Overwrite existing outputs.', action='store_true')
     parser.add_argument('--container', help='Path to Singularity container image.')
     parser.add_argument('--walltime', '-t', help='Walltime in format HH:MM:SS.')
-    parser.add_argument('--single_subject', help='Run with just a single subject from the input directory.')
+    # parser.add_argument('--single_subject', help='Run with just a single subject from the input directory.')
     parser.add_argument('--read_length', help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
     args = parser.parse_args()
 
 pending_args = args.__dict__.copy()
-parse_default('input_dirs', 'input/', args, pending_args)
+parse_default('input_list', '', args, pending_args)
+parse_default('input_dirs', '', args, pending_args)
 parse_default('output_dirs', 'output/', args, pending_args)
 parse_default('bank', 'asccasc', args, pending_args)
 parse_default('partition', 'pbatch', args, pending_args)
@@ -44,7 +47,7 @@ parse_default('local', False, args, pending_args)
 parse_default('container', "container/image.sif", args, pending_args)
 parse_default('nnodes', 1, args, pending_args)
 parse_default('walltime', '11:59:00', args, pending_args)
-parse_default('single_subject', '', args, pending_args)
+# parse_default('single_subject', '', args, pending_args)
 parse_default('read_length', 250, args, pending_args)
 
 if __name__ == '__main__':
@@ -90,8 +93,8 @@ if __name__ == '__main__':
 
 
     @python_app(executors=['worker'], cache=True)
-    def run_worker(input_dir, output_dir, params):
-        import math,multiprocessing,glob,time,csv,os
+    def run_worker(inputs, output_dir, params):
+        import math,multiprocessing,time,csv,os
         from os.path import basename,join
         from subscripts.utilities import smart_copy,smart_mkdir,smart_remove,run
 
@@ -101,7 +104,6 @@ if __name__ == '__main__':
         params['sdir'] = work_dir
         params['stdout'] = join(work_dir, 'worker.stdout')
         smart_copy(params['git_dir'], work_dir)
-        inputs = glob.glob(join(input_dir, '*.fastq.gz'))
         work_input_dir = join(work_dir, 'samples/a/b/raw_data')
 
         # Run fixq.sh
@@ -164,20 +166,36 @@ if __name__ == '__main__':
         smart_copy(join(work_dir, 'samples/a/b/references'), join(output_dir, 'references'), exclude=['*.gz', '*.fasta'])
     
     # Assign parallel workers
-    input_dirs = glob(join(args.input_dirs, '*'))
-    if args.single_subject != '':
-        input_dirs = [join(args.input_dirs, args.single_subject)]
-        print(f"WARNING: only running --single_subject {args.single_subject}")
+    inputs_dict = {}
+
+    if args.input_list != '' and args.input_dirs != '':
+        raise Exception('Arguments input_list and input_dirs are mutually exclusive.')
+
+    elif args.input_list != '':
+        with open(args.input_list) as f:
+            inputs_dict = json.load(f)
+        for k in inputs_dict:
+            if isinstance(inputs_dict[k], str):
+                inputs_dict[k] = [inputs_dict[k]]
+    
+    elif args.input_dirs != '':
+        for input_dir in glob(join(args.input_dirs, '*')):
+            k = basename(input_dir)
+            inputs_dict[k] = list(glob(abspath(join(input_dir, '*.fastq.gz'))))
+
+    else:
+        raise Exception('Missing argument input_list or input_dirs.')
+
     results =  []
-    for input_dir in input_dirs:
-        output_dir = join(args.output_dirs, basename(input_dir))
+    for k in inputs_dict:
+        output_dir = join(args.output_dirs, k)
         if exists(output_dir):
             if not args.force:
                 print(f"WARNING: skipping {output_dir} since it already exists. Overwrite with --force.")
                 continue
             else:
                 smart_remove(output_dir)
-        results.append(run_worker(abspath(input_dir), abspath(output_dir), params))
+        results.append(run_worker(inputs_dict[k], abspath(output_dir), params))
 
     for r in results:
         r.result()

@@ -1,0 +1,6 @@
+{
+    "dummy": [
+        "examples/input_data/dummy_2VirusMix_R1.fastq.gz",
+        "examples/input_data/dummy_2VirusMix_R2.fastq.gz"
+    ]
+}

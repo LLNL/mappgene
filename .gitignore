@@ -1,7 +1,6 @@
 .*
 *.stdout
-*.json
-!configs/example/*.json
+cmd_parsl*
 *.qsub
 *.core
 *.out
@@ -9,11 +8,6 @@
 output/
 runinfo/
 tmp/
-cmd_parsl.auto*
 !.gitignore
 !.gitattributes
-
-input/*
-!input/example
-
 *.sif
