@@ -2,9 +2,8 @@
 import argparse,multiprocessing,parsl,getpass,socket,json,sys,re,glob,math
 from distutils.dir_util import copy_tree
 from parsl.app.app import python_app,bash_app
-from parsl.executors import ThreadPoolExecutor,HighThroughputExecutor
+from parsl.executors import ThreadPoolExecutor,FluxExecutor
 from parsl.providers import LocalProvider,SlurmProvider
-from parsl.addresses import address_by_hostname,address_by_route
 from os.path import exists,join,split,splitext,abspath,basename,islink,isdir
 from subscripts.utilities import *
 
@@ -66,9 +65,9 @@ if __name__ == '__main__':
     if args.local:
         executor = ThreadPoolExecutor(label="worker")
     else:
-        executor = HighThroughputExecutor(
+        executor = FluxExecutor(
             label="worker",
-            address=address_by_hostname(),
+            flux_path="/usr/global/tools/flux/toss_3_x86_64_ib/flux-c0.28.0.pre-s0.17.0.pre/bin/flux",
             provider=SlurmProvider(
                 args.partition,
                 launcher=parsl.launchers.SrunLauncher(),
