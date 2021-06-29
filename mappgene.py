@@ -23,7 +23,7 @@ else:
 
     input_group = parser.add_mutually_exclusive_group()
     input_group.add_argument('--input_list', '-i', help='Path to JSON file specifying input FASTQ paths.')
-    input_group.add_argument('--input_dirs', '-i', help='Path to directory with subdirectories containing FASTQ.')
+    input_group.add_argument('--input_dirs', help='Path to directory with subdirectories containing FASTQ.')
     parser.add_argument('--output_dirs', '-o', help='Path to directory with outputs.')
     parser.add_argument('--nnodes', '-n', help='Number of nodes.')
     parser.add_argument('--local', help='Run only on local threads (for debugging).', action='store_true')
@@ -111,7 +111,7 @@ if __name__ == '__main__':
             work_f = join(work_input_dir, basename(f))
             work_f2 = join(work_input_dir, 'tmp_' + basename(f))
             smart_copy(f, work_f)
-            run(f'zcat {work_f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' + 
+            run(f'zcat {work_f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
                 f' | gzip -c > {work_f2}', params)
             smart_remove(work_f)
             os.rename(work_f2, work_f)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
             run(f"bbduk.sh in={work_f} out1={work_r1} out2={work_r2} ref={fasta} stats={work_stat} " +
                 "k=13 ktrim=l hdist=0 restrictleft=31 statscolumns=5", params)
             smart_remove(work_f)
-        
+
         # Update sample.tsv with read length
         run(f'cd {work_dir} && ./vpipe --dryrun', params)
         samples_tsv = join(work_dir, 'samples.tsv')
@@ -154,8 +154,8 @@ if __name__ == '__main__':
         run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
         # run('java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2', params)
         run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
-        run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' + 
-            f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' + 
+        run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
+            f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
             f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
 
         smart_copy(join(work_dir, 'samples/a/b/alignments'), join(output_dir, 'alignments'))
@@ -164,7 +164,7 @@ if __name__ == '__main__':
         smart_copy(join(work_dir, 'samples/a/b/preprocessed_data'), join(output_dir, 'preprocessed_data'), exclude=['*.gz', '*.fasta'])
         smart_copy(join(work_dir, 'samples/a/b/raw_data'), join(output_dir, 'raw_data'), exclude=['*.gz', '*.fasta'])
         smart_copy(join(work_dir, 'samples/a/b/references'), join(output_dir, 'references'), exclude=['*.gz', '*.fasta'])
-    
+
     # Assign parallel workers
     inputs_dict = {}
 
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         for k in inputs_dict:
             if isinstance(inputs_dict[k], str):
                 inputs_dict[k] = [inputs_dict[k]]
-    
+
     elif args.input_dirs != '':
         for input_dir in glob(join(args.input_dirs, '*')):
             k = basename(input_dir)
