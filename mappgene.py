@@ -92,9 +92,11 @@ if __name__ == '__main__':
 
 
     @python_app(executors=['worker'], cache=True)
-    def run_worker(inputs, output_dir, params):
-        import math,multiprocessing,time,csv,os
+    def run_worker(inputs, output_dir, params, subscripts_dir):
+        import math,multiprocessing,time,csv,os,sys
         from os.path import basename,join
+
+        sys.path.append(subscripts_dir)
         from subscripts.utilities import smart_copy,smart_mkdir,smart_remove,run
 
         # Setup parameters and input data
@@ -194,7 +196,7 @@ if __name__ == '__main__':
                 continue
             else:
                 smart_remove(output_dir)
-        results.append(run_worker(inputs_dict[k], abspath(output_dir), params))
+        results.append(run_worker(inputs_dict[k], abspath(output_dir), params, os.path.dirname(os.path.abspath(__file__))))
 
     for r in results:
         r.result()
