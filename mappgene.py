@@ -2,9 +2,9 @@
 import argparse,multiprocessing,parsl,getpass,socket,json,sys,re,glob,math
 from distutils.dir_util import copy_tree
 from parsl.app.app import python_app,bash_app
-from parsl.executors import ThreadPoolExecutor,HighThroughputExecutor
-from parsl.providers import LocalProvider,SlurmProvider
+from parsl.executors import ThreadPoolExecutor,FluxExecutor,HighThroughputExecutor
 from parsl.addresses import address_by_hostname,address_by_route
+from parsl.providers import LocalProvider,SlurmProvider
 from os.path import exists,join,split,splitext,abspath,basename,islink,isdir
 from subscripts.utilities import *
 
@@ -23,7 +23,7 @@ else:
 
     input_group = parser.add_mutually_exclusive_group()
     input_group.add_argument('--input_list', '-i', help='Path to JSON file specifying input FASTQ paths.')
-    input_group.add_argument('--input_dirs', '-i', help='Path to directory with subdirectories containing FASTQ.')
+    input_group.add_argument('--input_dirs', help='Path to directory with subdirectories containing FASTQ.')
     parser.add_argument('--output_dirs', '-o', help='Path to directory with outputs.')
     parser.add_argument('--nnodes', '-n', help='Number of nodes.')
     parser.add_argument('--local', help='Run only on local threads (for debugging).', action='store_true')
@@ -34,6 +34,7 @@ else:
     parser.add_argument('--walltime', '-t', help='Walltime in format HH:MM:SS.')
     # parser.add_argument('--single_subject', help='Run with just a single subject from the input directory.')
     parser.add_argument('--read_length', help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
+    parser.add_argument('--flux', help='Use the Flux scheduler instead of Parsl\'s native scheduler.', action='store_true')
     args = parser.parse_args()
 
 pending_args = args.__dict__.copy()
@@ -44,6 +45,7 @@ parse_default('bank', 'asccasc', args, pending_args)
 parse_default('partition', 'pbatch', args, pending_args)
 parse_default('force', False, args, pending_args)
 parse_default('local', False, args, pending_args)
+parse_default('flux', False, args, pending_args)
 parse_default('container', "container/image.sif", args, pending_args)
 parse_default('nnodes', 1, args, pending_args)
 parse_default('walltime', '11:59:00', args, pending_args)
@@ -65,6 +67,22 @@ if __name__ == '__main__':
 
     if args.local:
         executor = ThreadPoolExecutor(label="worker")
+    elif args.flux:
+        executor = FluxExecutor(
+            label="worker",
+            flux_path="/usr/global/tools/flux/toss_3_x86_64_ib/flux-c0.28.0.pre-s0.17.0.pre/bin/flux",
+            provider=SlurmProvider(
+                args.partition,
+                launcher=parsl.launchers.SrunLauncher(),
+                nodes_per_block=int(args.nnodes),
+                init_blocks=1,
+                max_blocks=1,
+                worker_init=f"export PYTHONPATH=$PYTHONPATH:{os.getcwd()}",
+                walltime=args.walltime,
+                scheduler_options="#SBATCH --exclusive\n#SBATCH -A {}\n".format(args.bank),
+                move_files=False,
+            ),
+        )
     else:
         executor = HighThroughputExecutor(
             label="worker",
@@ -93,9 +111,11 @@ if __name__ == '__main__':
 
 
     @python_app(executors=['worker'], cache=True)
-    def run_worker(inputs, output_dir, params):
-        import math,multiprocessing,time,csv,os
+    def run_worker(inputs, output_dir, params, subscripts_dir):
+        import math,multiprocessing,time,csv,os,sys
         from os.path import basename,join
+
+        sys.path.append(subscripts_dir)
         from subscripts.utilities import smart_copy,smart_mkdir,smart_remove,run
 
         # Setup parameters and input data
@@ -111,7 +131,7 @@ if __name__ == '__main__':
             work_f = join(work_input_dir, basename(f))
             work_f2 = join(work_input_dir, 'tmp_' + basename(f))
             smart_copy(f, work_f)
-            run(f'zcat {work_f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' + 
+            run(f'zcat {work_f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
                 f' | gzip -c > {work_f2}', params)
             smart_remove(work_f)
             os.rename(work_f2, work_f)
@@ -127,7 +147,7 @@ if __name__ == '__main__':
             run(f"bbduk.sh in={work_f} out1={work_r1} out2={work_r2} ref={fasta} stats={work_stat} " +
                 "k=13 ktrim=l hdist=0 restrictleft=31 statscolumns=5", params)
             smart_remove(work_f)
-        
+
         # Update sample.tsv with read length
         run(f'cd {work_dir} && ./vpipe --dryrun', params)
         samples_tsv = join(work_dir, 'samples.tsv')
@@ -154,8 +174,8 @@ if __name__ == '__main__':
         run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
         # run('java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2', params)
         run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
-        run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' + 
-            f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' + 
+        run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
+            f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
             f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
 
         smart_copy(join(work_dir, 'samples/a/b/alignments'), join(output_dir, 'alignments'))
@@ -164,7 +184,7 @@ if __name__ == '__main__':
         smart_copy(join(work_dir, 'samples/a/b/preprocessed_data'), join(output_dir, 'preprocessed_data'), exclude=['*.gz', '*.fasta'])
         smart_copy(join(work_dir, 'samples/a/b/raw_data'), join(output_dir, 'raw_data'), exclude=['*.gz', '*.fasta'])
         smart_copy(join(work_dir, 'samples/a/b/references'), join(output_dir, 'references'), exclude=['*.gz', '*.fasta'])
-    
+
     # Assign parallel workers
     inputs_dict = {}
 
@@ -177,7 +197,7 @@ if __name__ == '__main__':
         for k in inputs_dict:
             if isinstance(inputs_dict[k], str):
                 inputs_dict[k] = [inputs_dict[k]]
-    
+
     elif args.input_dirs != '':
         for input_dir in glob(join(args.input_dirs, '*')):
             k = basename(input_dir)
@@ -195,7 +215,7 @@ if __name__ == '__main__':
                 continue
             else:
                 smart_remove(output_dir)
-        results.append(run_worker(inputs_dict[k], abspath(output_dir), params))
+        results.append(run_worker(inputs_dict[k], abspath(output_dir), params, os.path.dirname(os.path.abspath(__file__))))
 
     for r in results:
         r.result()
