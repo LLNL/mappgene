@@ -2,7 +2,8 @@
 import argparse,multiprocessing,parsl,getpass,socket,json,sys,re,glob,math
 from distutils.dir_util import copy_tree
 from parsl.app.app import python_app,bash_app
-from parsl.executors import ThreadPoolExecutor,FluxExecutor
+from parsl.executors import ThreadPoolExecutor,FluxExecutor,HighThroughputExecutor
+from parsl.addresses import address_by_hostname,address_by_route
 from parsl.providers import LocalProvider,SlurmProvider
 from os.path import exists,join,split,splitext,abspath,basename,islink,isdir
 from subscripts.utilities import *
@@ -33,6 +34,7 @@ else:
     parser.add_argument('--walltime', '-t', help='Walltime in format HH:MM:SS.')
     # parser.add_argument('--single_subject', help='Run with just a single subject from the input directory.')
     parser.add_argument('--read_length', help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
+    parser.add_argument('--flux', help='Use the Flux scheduler instead of Parsl\'s native scheduler.', action='store_true')
     args = parser.parse_args()
 
 pending_args = args.__dict__.copy()
@@ -43,6 +45,7 @@ parse_default('bank', 'asccasc', args, pending_args)
 parse_default('partition', 'pbatch', args, pending_args)
 parse_default('force', False, args, pending_args)
 parse_default('local', False, args, pending_args)
+parse_default('flux', False, args, pending_args)
 parse_default('container', "container/image.sif", args, pending_args)
 parse_default('nnodes', 1, args, pending_args)
 parse_default('walltime', '11:59:00', args, pending_args)
@@ -64,10 +67,26 @@ if __name__ == '__main__':
 
     if args.local:
         executor = ThreadPoolExecutor(label="worker")
-    else:
+    elif args.flux:
         executor = FluxExecutor(
             label="worker",
             flux_path="/usr/global/tools/flux/toss_3_x86_64_ib/flux-c0.28.0.pre-s0.17.0.pre/bin/flux",
+            provider=SlurmProvider(
+                args.partition,
+                launcher=parsl.launchers.SrunLauncher(),
+                nodes_per_block=int(args.nnodes),
+                init_blocks=1,
+                max_blocks=1,
+                worker_init=f"export PYTHONPATH=$PYTHONPATH:{os.getcwd()}",
+                walltime=args.walltime,
+                scheduler_options="#SBATCH --exclusive\n#SBATCH -A {}\n".format(args.bank),
+                move_files=False,
+            ),
+        )
+    else:
+        executor = HighThroughputExecutor(
+            label="worker",
+            address=address_by_hostname(),
             provider=SlurmProvider(
                 args.partition,
                 launcher=parsl.launchers.SrunLauncher(),
