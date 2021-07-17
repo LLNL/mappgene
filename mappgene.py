@@ -2,7 +2,9 @@
 import argparse,multiprocessing,parsl,getpass,socket,json,sys,re,glob,math
 from distutils.dir_util import copy_tree
 from parsl.app.app import python_app,bash_app
-from parsl.executors import ThreadPoolExecutor,FluxExecutor,HighThroughputExecutor
+from parsl.executors import ThreadPoolExecutor,HighThroughputExecutor
+try: from parsl.executors import FluxExecutor
+except: print('Could not import Flux executor')
 from parsl.addresses import address_by_hostname,address_by_route
 from parsl.providers import LocalProvider,SlurmProvider
 from os.path import exists,join,split,splitext,abspath,basename,islink,isdir
