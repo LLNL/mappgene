@@ -147,7 +147,7 @@ if __name__ == '__main__':
             work_stat = join(work_input_dir, basename(f).replace('.fastq.gz', '.stat'))
             fasta = join(work_dir, 'references/PS_1200bp.fasta')
             run(f"bbduk.sh in={work_f} out1={work_r1} out2={work_r2} ref={fasta} stats={work_stat} " +
-                "k=13 ktrim=l hdist=0 restrictleft=31 statscolumns=5", params)
+                "k=13 ktrim=l hdist=2 restrictleft=31 statscolumns=5 minlen=65", params)
             smart_remove(work_f)
 
         # Update sample.tsv with read length
