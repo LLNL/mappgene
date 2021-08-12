@@ -419,4 +419,4 @@ def deinterlace(sequence_file, forward_file, reverse_file):
     run(f"gzip {reverse_file}")
 
     smart_remove(sequence_file)
-            
+     
