@@ -1,11 +1,11 @@
-import time,datetime,os,subprocess,sys,shutil,hashlib,grp,mmap,fnmatch,gzip,re
+import time,datetime,os,subprocess,sys,shutil,hashlib,grp,mmap,fnmatch,gzip,re,random
+import distutils.dir_util
 from glob import glob
 from os.path import exists,join,split,splitext,abspath,basename,dirname,isdir,samefile,getsize
 from shutil import copyfile,copytree,rmtree,ignore_patterns
 from os import system,environ,makedirs,remove
 from subprocess import Popen,PIPE
 from itertools import islice
-from distutils.dir_util import copy_tree
 
 def smart_mkdir(path):
     if exists(path):
@@ -24,7 +24,7 @@ def smart_remove(path):
         except OSError:
             pass
 
-def smart_copy(src, dest):
+def smart_copy(src, dest, exclude=[]):
     """Copy file or directory, while ignoring non-existent or equivalent files
     """
     if exists(dest) and samefile(src, dest):
@@ -33,8 +33,15 @@ def smart_copy(src, dest):
     if not exists(dirname(dest)):
         smart_mkdir(dirname(dest))
     if isdir(src):
-        copy_tree(src, dest)
+        tmp = f'/tmp/{basename(src)}_{random.randint(0,1000)}'
+        copytree(src, tmp, ignore=ignore_patterns(*exclude))   # copy tree with excludes
+        distutils.dir_util.copy_tree(tmp, dest)                # then copy tree without overwrite
+        smart_remove(tmp)
     else:
+        for pattern in exclude:
+            if fnmatch.fnmatch(src, pattern):
+                print('Did not copy {} because of exclude={}'.format(src, exclude))
+                return
         copyfile(src, dest)
 
 def exist_all(paths):
@@ -48,17 +55,16 @@ def run(command, params=None, ignore_errors=False, print_output=True, print_time
     Safer than raw execution. Can also write to logs and utilize a container.
     """
     start = int(time.time())
+    work_dir = params['work_dir']
     stdout = params['stdout'] if (params and 'stdout' in params) else None
     container = params['container'] if (params and 'container' in params) else None
     use_gpu = params['use_gpu'] if (params and 'use_gpu' in params) else None
-    sdir = params['sdir'] if (params and 'sdir' in params) else None
     container_cwd = params['container_cwd'] if (params and 'container_cwd' in params) else None
 
     # When using a container, change all paths to be relative to its mounted directory (hideous, but works without changing other code)
     if container is not None:
-        odir = split(sdir)[0]
-        command = command.replace(odir, "/mnt")
-        command = 'singularity exec{} -B {}:/mnt {} sh -c "{}"'.format(" --nv" if use_gpu else "", odir, container, command)
+        command = command.replace(work_dir, "/mnt")
+        command = 'singularity exec{} -B {}:/mnt {} sh -c "{}"'.format(" --nv" if use_gpu else "", work_dir, container, command)
         print(command)
         if container_cwd:
             command = "cd {}; {}".format(container_cwd, command)
@@ -150,9 +156,8 @@ def print_finish(start_time):
     print(get_finish())
 
 def write(path, output, params={}):
-    if params and 'container' in params and 'sdir' in params:
-        odir = split(params['sdir'])[0]
-        output = output.replace(odir, "/share")
+    if params and 'container' in params and 'work_dir' in params:
+        command = command.replace(params['work_dir'], "/mnt")
     # make path to file if not an empty string
     if dirname(path):
         smart_mkdir(dirname(path))
@@ -192,7 +197,7 @@ def record_apptime(params, app_start_time, substep, *args):
 def record_finish(params):
     """Record cumulative step duration from timing log, and write to stdout.
     """
-    sdir = params['sdir']
+    work_dir = params['work_dir']
     step = params['step']
     timing_log = params['timing_log']
     stdout = params['stdout']
@@ -245,12 +250,12 @@ def update_permissions(params):
     """Give user and group permissions to all generated files.
     """
     start_time = time.time()
-    sdir = params['sdir']
+    work_dir = params['work_dir']
     bids_dicom_dir = params['bids_dicom_dir']
     bids_nifti_dir = params['bids_nifti_dir']
     group = params['group']
     stdout = params['stdout']
-    for directory in [bids_dicom_dir, bids_nifti_dir, sdir]:
+    for directory in [bids_dicom_dir, bids_nifti_dir, work_dir]:
         run("find {} -type f -print0 | xargs -0 -I _ chmod 770 _".format(directory))
         run("find {} -type d -print0 | xargs -0 -I _ chmod 2770 _".format(directory))
         if params['group']:
@@ -412,6 +417,6 @@ def deinterlace(sequence_file, forward_file, reverse_file):
 
     smart_remove(sequence_file)
 
-def replace_extension(path, extension):
+def replace_extension(path, extension=''):
     dirname, basename = split(path)
     return join(dirname, basename.split('.')[0] + extension)
