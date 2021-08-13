@@ -5,6 +5,7 @@ from shutil import copyfile,copytree,rmtree,ignore_patterns
 from os import system,environ,makedirs,remove
 from subprocess import Popen,PIPE
 from itertools import islice
+from distutils.dir_util import copy_tree
 
 def smart_mkdir(path):
     if exists(path):
@@ -23,26 +24,17 @@ def smart_remove(path):
         except OSError:
             pass
 
-def smart_copy(src, dest, exclude=[]):
-    """Copy file or directory, while ignoreing non-existent or equivalent files
+def smart_copy(src, dest):
+    """Copy file or directory, while ignoring non-existent or equivalent files
     """
-    if not exists(src):
-        print("ERROR: Cannot find file to copy: {}".format(src))
-        return
-        # raise Exception("Cannot find file to copy: {}".format(src))
     if exists(dest) and samefile(src, dest):
         print("Warning: ignoring smart_copy because src and dest both point to {}".format(dest))
         return
-    smart_remove(dest)
     if not exists(dirname(dest)):
         smart_mkdir(dirname(dest))
     if isdir(src):
-        copytree(src, dest, ignore=ignore_patterns(*exclude))
+        copy_tree(src, dest)
     else:
-        for pattern in exclude:
-            if fnmatch.fnmatch(src, pattern):
-                print('Did not copy {} because of exclude={}'.format(src, exclude))
-                return
         copyfile(src, dest)
 
 def exist_all(paths):
@@ -419,4 +411,7 @@ def deinterlace(sequence_file, forward_file, reverse_file):
     run(f"gzip {reverse_file}")
 
     smart_remove(sequence_file)
-     
+
+def replace_extension(path, extension):
+    dirname, basename = split(path)
+    return join(dirname, basename.split('.')[0] + extension)

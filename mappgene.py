@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse,parsl,os,sys,glob,shutil
-from subscripts.utilities import *
-from subscripts.vpipe import run_vpipe
+from subscripts import *
 
 parser = argparse.ArgumentParser()
 
@@ -64,13 +63,12 @@ if __name__ == '__main__':
 
     # Copy V-pipe repo as main working directory
     tmp_dir = os.path.abspath('tmp')
+    git_dir = os.path.join(tmp_dir, 'vpipe')
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
-    git_dir = os.path.join(tmp_dir, 'vpipe')
     git_params = {'sdir':git_dir, 'container':args.container}
     run(f'cp -rf /opt/vpipe {git_dir}', git_params)
-    smart_remove(git_dir)
-    smart_copy('vpipe_files/', git_dir)
+    smart_copy('extra_files/', git_dir)
     run(f'cd {git_dir} && sh init_project.sh || true', git_params)
 
     params = {
@@ -119,8 +117,15 @@ if __name__ == '__main__':
     parsl.set_stream_logger()
     parsl.load(config)
 
+    results =  []
     for merged_input in merged_inputs:
-        print(merged_input)
+        read1 = replace_extension(merged_input, '_R1.fastq.gz')
+        read2 = replace_extension(merged_input, '_R2.fastq.gz')
+        print(read1, read2)
+        results.append(run_deinterleave(merged_input))
+    for r in results:
+        r.result()
+
 
 
     # results =  []

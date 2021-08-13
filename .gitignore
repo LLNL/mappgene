@@ -1,13 +1,14 @@
 .*
 *.stdout
 cmd_parsl*
+sftp-config.json
 *.qsub
 *.core
 *.out
+*.sif
 *.pyc
 output/
 runinfo/
 tmp/
+__pycache__/
 !.gitignore
-!.gitattributes
-*.sif
