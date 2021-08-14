@@ -61,6 +61,7 @@ if __name__ == '__main__':
     run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
     smart_copy('extra_files', vpipe_dir)
     run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
+    update_permissions(base_params)
 
     if isinstance(args.inputs, str):
         args.inputs = glob(args.inputs)
