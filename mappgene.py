@@ -53,7 +53,6 @@ if __name__ == '__main__':
         'container': abspath(args.container),
         'work_dir': tmp_dir,
         'read_length': args.read_length,
-        # 'script_dir': dirname(abspath(__file__)),
     }
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
@@ -85,6 +84,7 @@ if __name__ == '__main__':
             smart_remove(raw_dir)
             params = base_params.copy()
             params['work_dir'] = subject_dir
+            params['stdout'] = join(subject_dir, 'mappgene.stdout')
             all_params[subject] = params
 
         smart_copy(tmp_dir, subject_dir)

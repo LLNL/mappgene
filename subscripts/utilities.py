@@ -64,7 +64,9 @@ def run(command, params=None, ignore_errors=False, print_output=True, print_time
     # When using a container, change all paths to be relative to its mounted directory (hideous, but works without changing other code)
     if container is not None:
         command = command.replace(work_dir, "/mnt")
-        command = 'singularity exec{} -B {}:/mnt {} sh -c "{}"'.format(" --nv" if use_gpu else "", work_dir, container, command)
+        command = (f'singularity exec {"--nv" if use_gpu else ""} --cleanenv -B ' +
+            f'{work_dir}:/mnt {container} ' +
+            f'sh -c "{command}"')
         print(command)
         if container_cwd:
             command = "cd {}; {}".format(container_cwd, command)

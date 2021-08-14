@@ -42,6 +42,7 @@ def run_vpipe(params):
 
     # Run V-pipe analysis
     ncores = int(math.floor(multiprocessing.cpu_count() / 2))
+    run(f'cd {subject_dir} && ./vpipe --cores {ncores} --use-conda --unlock', params)
     run(f'cd {subject_dir} && ./vpipe --cores {ncores} --use-conda', params)
     time.sleep(10)
 
