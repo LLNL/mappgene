@@ -54,7 +54,7 @@ if __name__ == '__main__':
         'container': abspath(args.container),
         'work_dir': tmp_dir,
         'read_length': args.read_length,
-        'stdout': abspath(join(args.outputs, 'mappgene.stdout'))
+        'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)

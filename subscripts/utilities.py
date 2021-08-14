@@ -255,12 +255,12 @@ def update_permissions(params):
     work_dir = params['work_dir']
     stdout = params['stdout']
     for directory in [work_dir]:
-        run("find {} -type f -print0 | xargs -0 -I _ chmod 770 _".format(directory))
-        run("find {} -type d -print0 | xargs -0 -I _ chmod 2770 _".format(directory))
+        run("find {} -type f -print0 | xargs -0 -I _ chmod 770 _".format(directory), params)
+        run("find {} -type d -print0 | xargs -0 -I _ chmod 2770 _".format(directory), params)
         if 'group' in params:
             group = params['group']
-            run("find {} -type f -print0 | xargs -0 -I _ chgrp {} _".format(directory, group))
-            run("find {} -type d -print0 | xargs -0 -I _ chgrp {} _".format(directory, group))
+            run("find {} -type f -print0 | xargs -0 -I _ chgrp {} _".format(directory, group), params)
+            run("find {} -type d -print0 | xargs -0 -I _ chgrp {} _".format(directory, group), params)
     write(stdout, "Updated file permissions, took {} (h:m:s)".format(get_time_string(time.time() - start_time, params)))
 
 def generate_checksum(input_dir):
