@@ -11,7 +11,7 @@ parser.add_argument('--inputs', '-i', nargs='+', default='inputs/*.fastq.gz',
 parser.add_argument('--outputs', '-o', default='outputs/',
     help='Path to output directory.')
 
-parser.add_argument('--read_length', default=250,
+parser.add_argument('--read_length', default=120,
     help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
 
 parser.add_argument('--container', default='container/image.sif',
@@ -49,6 +49,7 @@ if __name__ == '__main__':
 
     # Copy V-pipe repo as main working directory
     tmp_dir = abspath('tmp')
+    vpipe_dir = join(tmp_dir, 'vpipe')
     base_params = {
         'container': abspath(args.container),
         'work_dir': tmp_dir,
@@ -57,9 +58,9 @@ if __name__ == '__main__':
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
     
-    run(f'cp -rf /opt/vpipe/* {tmp_dir}', base_params)
-    smart_copy('extra_files/', tmp_dir)
-    run(f'cd {tmp_dir} && sh init_project.sh || true', base_params)
+    run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
+    smart_copy('extra_files', vpipe_dir)
+    run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
 
     if isinstance(args.inputs, str):
         args.inputs = glob(args.inputs)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
 
         subject = replace_extension(basename(f).replace('_R1.', '.').replace('_R2.', '.'))
         subject_dir = abspath(join(args.outputs, subject))
-        raw_dir = join(subject_dir, 'samples/a/b/raw_data')
+        raw_dir = join(vpipe_dir, 'samples/a/b/raw_data')
         read = join(raw_dir, basename(f))
 
         if not subject in all_params:
