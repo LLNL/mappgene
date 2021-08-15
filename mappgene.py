@@ -11,7 +11,7 @@ parser.add_argument('--inputs', '-i', nargs='+', default='inputs/*.fastq.gz',
 parser.add_argument('--outputs', '-o', default='outputs/',
     help='Path to output directory.')
 
-parser.add_argument('--read_length', default=120,
+parser.add_argument('--read_length', default=250,
     help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
 
 parser.add_argument('--container', default='container/image.sif',
