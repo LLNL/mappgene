@@ -33,7 +33,9 @@ def smart_copy(src, dest, exclude=[]):
     if not exists(dirname(dest)):
         smart_mkdir(dirname(dest))
     if isdir(src):
-        tmp = f'/usr/tmp/{basename(src)}_{random.randint(0,1000)}'
+        tmp_root = join(dirname(dirname(__file__)), 'tmp')
+        tmp = join(tmp_root, f'{basename(src)}_{random.randint(0,1000)}')
+        smart_remove(tmp)
         copytree(src, tmp, ignore=ignore_patterns(*exclude))   # copy tree with excludes
         distutils.dir_util.copy_tree(tmp, dest)                # then copy tree without overwrite
         smart_remove(tmp)
