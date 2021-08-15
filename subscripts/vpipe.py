@@ -68,3 +68,9 @@ def run_vpipe(params):
     smart_copy(join(vpipe_dir, 'samples/a/b/raw_data'), join(output_dir, 'raw_data'), exclude=['*.gz', '*.fasta'])
     smart_copy(join(vpipe_dir, 'samples/a/b/references'), join(output_dir, 'references'), exclude=['*.gz', '*.fasta'])
 
+    # Clear extra files
+    smart_remove('snpEff_genes.txt')
+    smart_remove('snpEff_summary.html')
+
+
+
