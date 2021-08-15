@@ -31,6 +31,7 @@ def run_vpipe(params):
         smart_remove(f)
 
     # Update sample.tsv with read length
+    smart_remove(join(vpipe_dir, '.snakemake'))
     run(f'cd {vpipe_dir} && ./vpipe --dryrun', params)
     samples_tsv = join(vpipe_dir, 'samples.tsv')
     with open(samples_tsv, 'r') as fr, open(f'{samples_tsv}.tmp', 'w') as fw:

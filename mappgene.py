@@ -60,7 +60,8 @@ if __name__ == '__main__':
     smart_mkdir(tmp_dir)
     
     run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
-    smart_copy('extra_files', vpipe_dir)
+    smart_copy('extra_files', tmp_dir)
+
     run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
     update_permissions(base_params)
 
