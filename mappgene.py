@@ -71,28 +71,26 @@ if __name__ == '__main__':
     all_params = {}
 
     # Copy reads to subject directory
-    for f in args.inputs:
-        out1 = f.replace('_R2.', '_R1.')
-        out2 = f.replace('_R1.', '_R2.')
-        if '_R1.' in f and out2 not in args.inputs:
-            raise Exception(f'Missing paired read: {out2}')
-        if '_R2.' in f and out1 not in args.inputs:
-            raise Exception(f'Missing paired read: {out1}')
+    for input_read in args.inputs:
+        pair1 = input_read.replace('_R2.', '_R1.')
+        pair2 = input_read.replace('_R1.', '_R2.')
+        if '_R1.' in input_read and pair2 not in args.inputs:
+            raise Exception(f'Missing paired read: {pair2}')
+        if '_R2.' in input_read and pair1 not in args.inputs:
+            raise Exception(f'Missing paired read: {pair1}')
 
-        subject = replace_extension(basename(f).replace('_R1.', '.').replace('_R2.', '.'))
+        subject = replace_extension(basename(input_read).replace('_R1.', '.').replace('_R2.', '.'))
         subject_dir = abspath(join(args.outputs, subject))
-        raw_dir = join(vpipe_dir, 'samples/a/b/raw_data')
-        read = join(raw_dir, basename(f))
 
         if not subject in all_params:
-            smart_remove(raw_dir)
+            smart_copy(tmp_dir, subject_dir)
             params = base_params.copy()
             params['work_dir'] = subject_dir
+            params['input_reads'] = [input_read]
             params['stdout'] = join(subject_dir, 'worker.stdout')
             all_params[subject] = params
-
-        smart_copy(tmp_dir, subject_dir)
-        smart_copy(f, read)
+        else:
+            all_params[subject]['input_reads'].append(input_read)
 
     if args.slurm:
         executor = parsl.executors.HighThroughputExecutor(

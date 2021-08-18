@@ -7,7 +7,7 @@ sftp-config.json
 *.out
 *.sif
 *.pyc
-output/
+outputs/
 runinfo/
 tmp/
 __pycache__/

@@ -6,18 +6,22 @@ from subscripts import *
 @python_app(executors=['worker'])
 def run_vpipe(params):
     subject_dir = params['work_dir']
+    input_reads = params['input_reads']
     vpipe_dir = join(subject_dir, 'vpipe')
     raw_dir = join(vpipe_dir, 'samples/a/b/raw_data')
-    reads = list(glob(join(raw_dir, '*.fastq.gz')))
+    smart_remove(raw_dir)
+    reads = []
 
     # Run fixq.sh
-    for f in reads:
-        tmp_f = join(raw_dir, 'tmp_' + basename(f))
-        smart_copy(f, tmp_f)
+    for input_read in input_reads:
+        tmp_f = join(raw_dir, 'tmp_' + basename(input_read))
+        f = join(raw_dir, basename(input_read))
+        smart_copy(input_read, f)
         run(f'zcat {f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
             f' | gzip -c > {tmp_f}', params)
         smart_remove(f)
         os.rename(tmp_f, f)
+        reads.append(f)
 
     # Deinterleave if only a single FASTQ was found
     if len(reads) == 1:
