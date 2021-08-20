@@ -7,8 +7,11 @@ sftp-config.json
 *.out
 *.sif
 *.pyc
+*.egg-info/
+build/
 outputs/
 runinfo/
+dist/
 tmp/
 __pycache__/
 !.gitignore
