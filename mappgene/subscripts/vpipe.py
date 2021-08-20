@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import os,sys,glob,multiprocessing,time,csv,math
 from parsl.app.app import python_app
-from subscripts import *
+from os.path import *
+from mappgene.subscripts import *
 
 @python_app(executors=['worker'])
 def run_vpipe(params):
@@ -19,8 +20,9 @@ def run_vpipe(params):
         smart_copy(input_read, f)
         run(f'zcat {f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
             f' | gzip -c > {tmp_f}', params)
-        smart_remove(f)
-        os.rename(tmp_f, f)
+        if exists(tmp_f):
+            smart_remove(f)
+            os.rename(tmp_f, f)
         reads.append(f)
 
     # Deinterleave if only a single FASTQ was found

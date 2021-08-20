@@ -1,54 +1,62 @@
 #!/usr/bin/env python3
 import argparse,parsl,os,sys,glob,shutil
 from os.path import *
-from subscripts import *
+from mappgene.subscripts import *
 
-parser = argparse.ArgumentParser()
+script_dir = abspath(os.path.dirname(os.path.realpath(__file__)))
+cwd = abspath(os.getcwd())
 
-parser.add_argument('--inputs', '-i', nargs='+', default='inputs/*.fastq.gz',
-    help='Paths to FASTQ input file(s).')
+def parse_args(args):
 
-parser.add_argument('--outputs', '-o', default='outputs/',
-    help='Path to output directory.')
 
-parser.add_argument('--read_length', default=250,
-    help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
+    parser = argparse.ArgumentParser()
 
-parser.add_argument('--container', default='container/image.sif',
-    help='Path to Singularity container image.')
+    parser.add_argument('--inputs', '-i', nargs='+', default=join(script_dir, 'data/example_inputs/*.fastq.gz'),
+        help='Paths to FASTQ input file(s).')
 
-parser.add_argument('--walltime', '-t', default='11:59:00',
-    help='Walltime in format HH:MM:SS.')
+    parser.add_argument('--outputs', '-o', default='outputs/',
+        help='Path to output directory.')
 
-parser.add_argument('--no_ivar', action='store_true',
-    help='Disable ivar step.')
+    parser.add_argument('--read_length', default=250,
+        help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
 
-parser.add_argument('--no_vpipe', action='store_true',
-    help='Disable vpipe step.')
+    parser.add_argument('--container', default=join(cwd, 'image.sif'),
+        help='Path to Singularity container image.')
 
-scheduler_group = parser.add_mutually_exclusive_group()
+    parser.add_argument('--walltime', '-t', default='11:59:00',
+        help='Walltime in format HH:MM:SS.')
 
-scheduler_group.add_argument('--slurm', '-s', action='store_true',
-    help='Use the Slurm scheduler.')
+    parser.add_argument('--no_ivar', action='store_true',
+        help='Disable ivar step.')
 
-scheduler_group.add_argument('--flux', action='store_true',
-    help='Use the Flux scheduler.')
+    parser.add_argument('--no_vpipe', action='store_true',
+        help='Disable vpipe step.')
 
-parser.add_argument('--nnodes', '-n', default=1,
-    help='Slurm/Flux: number of nodes.')
+    scheduler_group = parser.add_mutually_exclusive_group()
 
-parser.add_argument('--bank', '-b', default='asccasc',
-    help='Slurm/Flux: bank to charge for jobs.')
+    scheduler_group.add_argument('--slurm', '-s', action='store_true',
+        help='Use the Slurm scheduler.')
 
-parser.add_argument('--partition', '-p', default='pbatch',
-    help='Slurm/Flux: partition to assign jobs.')
+    scheduler_group.add_argument('--flux', action='store_true',
+        help='Use the Flux scheduler.')
 
-args = parser.parse_args()
+    parser.add_argument('--nnodes', '-n', default=1,
+        help='Slurm/Flux: number of nodes.')
 
-if __name__ == '__main__':
+    parser.add_argument('--bank', '-b', default='asccasc',
+        help='Slurm/Flux: bank to charge for jobs.')
+
+    parser.add_argument('--partition', '-p', default='pbatch',
+        help='Slurm/Flux: partition to assign jobs.')
+
+    return parser.parse_args()
+
+def main():
+
+    args = parse_args(sys.argv[1:])
 
     # Copy V-pipe repo as main working directory
-    tmp_dir = abspath('tmp')
+    tmp_dir = join(cwd, 'tmp')
     vpipe_dir = join(tmp_dir, 'vpipe')
     base_params = {
         'container': abspath(args.container),
@@ -56,11 +64,17 @@ if __name__ == '__main__':
         'read_length': args.read_length,
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
+
+    if not exists(base_params['container']):
+        raise Exception(f"Missing container image at {base_params['container']}\n\n" +
+            f"Either specify another location with --container\n\n" +
+            f"Or download the container at: www.google.com\n")
+
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
     
     run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
-    smart_copy('extra_files', tmp_dir)
+    smart_copy(join(script_dir, 'data/extra_files'), tmp_dir)
 
     run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
     update_permissions(base_params)
@@ -144,3 +158,6 @@ if __name__ == '__main__':
             results.append(run_vpipe(params))
         for r in results:
             r.result()
+
+if __name__ == '__main__':
+    main()

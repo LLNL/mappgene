@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import os,sys,glob,multiprocessing,time,csv,math
 from parsl.app.app import python_app
-from subscripts import *
+from os.path import *
+from mappgene.subscripts import *
 
 @python_app(executors=['worker'])
 def run_ivar(params):
