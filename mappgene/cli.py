@@ -71,8 +71,9 @@ def main():
 
     if not exists(base_params['container']):
         raise Exception(f"Missing container image at {base_params['container']}\n\n" +
-            f"Either specify another location with --container\n\n" +
-            f"Or download the container at: www.google.com\n")
+            f"Either specify another image with --container\n\n" +
+            f"Or build the container with the recipe at: {join(script_dir, 'data/container/conda.def')}\n\n" +
+            f"Or download the container at: https://www.dropbox.com/s/ymsfn9z7v3utqe0/image.sif?dl=1\n")
 
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
