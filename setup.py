@@ -9,10 +9,10 @@ src_path = join(src_path, 'mappgene')
 setup(
     name='mappgene',
     description='Genomic sequence analysis for HPC',
-    version='0.1.5',
+    version='0.1.7',
     python_requires='>=3.7',
     author='Joseph Moon',
-    author_email='jmoon1506@gmail.com',
+    author_email='moon15@llnl.gov',
     entry_points={
         'console_scripts': [
             'mappgene = mappgene.cli:main'
@@ -21,10 +21,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={'mappgene' : ['data/*'] },
-    install_requires=['numpy>=1.11.3', 'parsl>=0.9.0', 'pytest>=4.0'],
+    install_requires=['parsl>=1.1.0', 'pytest>=6.2.4'],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "License :: OSI Approved :: BSD License",
+        "Operating System :: POSIX :: Linux",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: System :: Distributed Computing",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",

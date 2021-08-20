@@ -11,17 +11,18 @@ def parse_args(args):
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--inputs', '-i', nargs='+', default=join(script_dir, 'data/example_inputs/*.fastq.gz'),
-        help='Paths to FASTQ input file(s).')
+    if not '--test' in sys.argv:
+        parser.add_argument('inputs', nargs='+',
+            help='Paths to FASTQ input file(s).')
 
-    parser.add_argument('--outputs', '-o', default='outputs/',
+    parser.add_argument('--outputs', '-o', default='mappgene_outputs/',
         help='Path to output directory.')
+
+    parser.add_argument('--container', '-c', default=join(cwd, 'image.sif'),
+        help='Path to Singularity container image.')
 
     parser.add_argument('--read_length', default=250,
         help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
-
-    parser.add_argument('--container', default=join(cwd, 'image.sif'),
-        help='Path to Singularity container image.')
 
     parser.add_argument('--walltime', '-t', default='11:59:00',
         help='Walltime in format HH:MM:SS.')
@@ -31,6 +32,9 @@ def parse_args(args):
 
     parser.add_argument('--no_vpipe', action='store_true',
         help='Disable vpipe step.')
+
+    parser.add_argument('--test', action='store_true',
+        help='Test using the example inputs.')
 
     scheduler_group = parser.add_mutually_exclusive_group()
 
@@ -79,9 +83,12 @@ def main():
     run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
     update_permissions(base_params)
 
+    if args.test:
+        args.inputs = join(script_dir, 'data/example_inputs/*.fastq.gz')
+    
     if isinstance(args.inputs, str):
         args.inputs = glob(args.inputs)
-    
+
     all_params = {}
 
     # Copy reads to subject directory
