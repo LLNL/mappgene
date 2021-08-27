@@ -9,7 +9,7 @@ src_path = join(src_path, 'mappgene')
 setup(
     name='mappgene',
     description='Genomic sequence analysis for HPC',
-    version='0.1.7',
+    version='0.1.8',
     python_requires='>=3.7',
     author='Joseph Moon',
     author_email='moon15@llnl.gov',
