@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={'mappgene' : ['data/*'] },
-    install_requires=['parsl>=1.1.0', 'pytest>=6.2.4', 'pip>=21.2.4'],
+    install_requires=['pip>=21.2.4', 'parsl>=1.1.0', 'pytest>=6.2.4'],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "License :: OSI Approved :: BSD License",
