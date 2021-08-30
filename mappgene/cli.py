@@ -69,6 +69,10 @@ def main():
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
 
+    if shutil.which('singularity') is None:
+        raise Exception(f"Missing Singularity executable in PATH.\n\n" +
+            f"Please ensure Singularity is installed: https://sylabs.io/guides/3.0/user-guide/installation.html")
+
     if not exists(base_params['container']):
         raise Exception(f"Missing container image at {base_params['container']}\n\n" +
             f"Either specify another image with --container\n\n" +
