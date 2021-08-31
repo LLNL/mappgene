@@ -10,6 +10,7 @@ sftp-config.json
 *.egg-info/
 build/
 outputs/
+mappgene_outputs/
 runinfo/
 dist/
 tmp/
