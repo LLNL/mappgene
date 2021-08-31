@@ -18,10 +18,12 @@ def parse_args(args):
     parser.add_argument('--test', action='store_true',
         help='Test using the example inputs.')
 
-    parser.add_argument('--ivar', action='store_true',
+    workflow_group = parser.add_mutually_exclusive_group(required=True)
+
+    workflow_group.add_argument('--ivar', action='store_true',
         help='Run the iVar workflow.')
 
-    parser.add_argument('--vpipe', action='store_true',
+    workflow_group.add_argument('--vpipe', action='store_true',
         help='Run the V-pipe workflow.')
 
     parser.add_argument('--outputs', '-o', default='mappgene_outputs/',
@@ -58,10 +60,6 @@ def parse_args(args):
 def main():
 
     args = parse_args(sys.argv[1:])
-
-    if not args.vpipe and not args.ivar:
-        raise Exception(f"No workflow specified!\n\n" +
-            f"Specify --ivar and/or --vpipe\n")
 
     # Copy V-pipe repo as main working directory
     tmp_dir = join(cwd, 'tmp')

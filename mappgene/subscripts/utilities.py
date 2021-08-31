@@ -128,15 +128,13 @@ def get_time_date():
     """
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M %p")
 
-def get_time_string(seconds, params=None):
+def get_time_string(seconds):
     """Returns seconds as Slurm-compatible time string
     """
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     time_string = "{:02d}:{:02d}:{:02d}".format(int(h), int(m), int(s))
     if h > 99999 or h < 0:
-        if params and 'stdout' in params:
-            write(params['stdout'], "Error: Invalid time string {}".format(time_string))
         return "00:00:00"
     return time_string
 
@@ -172,84 +170,6 @@ def write(path, output, params={}):
 def write_error(path, output, params={}):
     write(path, 'Exception: ' + output, params)
     raise output
-
-def record_start(params):
-    """Record step start in timing log, and write to stdout.
-    """
-    step = params['step']
-    timing_log = params['timing_log']
-    stdout = params['stdout']
-    with open(stdout, 'a') as f:
-        f.write("\n=====================================\n")
-        f.write(get_start(step))
-        f.write("---------------------------------------\n")
-        f.write("Parameters:\n")
-        for k, v in params.items():
-            f.write(str(k) + ': ' + str(v) + '\n')
-        f.write("=====================================\n\n")
-    write(timing_log, "{} start".format(time.time()))
-
-def record_apptime(params, app_start_time, substep, *args):
-    """Record substep duration in timing log.
-    """
-    timing_log = params['timing_log']
-    apptime = time.time() - app_start_time
-    line = "{} {}".format(apptime, substep)
-    for arg in args:
-        line += ' ' + str(arg) # save additional args for debug
-    write(timing_log, line)
-
-def record_finish(params):
-    """Record cumulative step duration from timing log, and write to stdout.
-    """
-    work_dir = params['work_dir']
-    step = params['step']
-    timing_log = params['timing_log']
-    stdout = params['stdout']
-    cores_per_task = int(params['cores_per_task'])
-    use_gpu = params['use_gpu']
-    global_timing_log = params['global_timing_log']
-    sname = params['sname']
-    task_start_time = -1
-    task_total_time = 0
-    max_apptimes = {}
-    with open(timing_log, 'r') as f:
-        for line in f.readlines():
-            chunks = [x.strip() for x in line.strip().split() if x]
-            if len(chunks) < 2 or not is_float(chunks[0]):
-                write(stdout, 'Invalid time value in line: {}'.format(line))
-                continue
-            apptime = float(chunks[0])
-            if chunks[1] == 'start':
-                task_start_time = apptime
-                continue
-            if not is_integer(chunks[1]):
-                write(stdout, 'Invalid substep in line: {}'.format(line))
-                continue
-            substep = int(chunks[1])
-            task_total_time += apptime
-            if substep not in max_apptimes:
-                max_apptimes[substep] = apptime
-            else:
-                max_apptimes[substep] = max(apptime, max_apptimes[substep])
-    if task_start_time == -1:
-        write(stdout, 'Failed to find valid start time')
-    ideal_walltime = get_time_string(sum(list(max_apptimes.values())), params) # find longest apptimes in same substep
-    actual_walltime = get_time_string(time.time() - task_start_time, params)
-    total_core_time = get_time_string(task_total_time * cores_per_task, params) # sum of apptimes, multiplied by cores
-    with open(stdout, 'a') as f:
-        f.write("\n=====================================\n")
-        f.write(get_finish(step))
-        f.write("Ideal walltime: {} (h:m:s)\n".format(ideal_walltime))
-        f.write("Actual walltime: {} (h:m:s)\n".format(actual_walltime))
-        f.write("Total core time: {} (h:m:s)\n".format(total_core_time))
-        f.write("{} parallel cores per task\n".format(cores_per_task))
-        f.write("Used GPU: {}\n".format(use_gpu))
-        f.write("=====================================\n\n")
-        f.write("stdout_log_complete")
-    write(global_timing_log, "{},{},{},{},{},{}".format(sname, step, ideal_walltime, actual_walltime, total_core_time, use_gpu))
-    run("chmod 770 {}".format(timing_log))
-    run("chmod 770 {}".format(stdout))
 
 def update_permissions(params):
     """Give user and group permissions to all generated files.

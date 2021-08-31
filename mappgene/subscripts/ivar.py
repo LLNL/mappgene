@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-import os,sys,glob,multiprocessing,time,csv,math
+import os,sys,glob,multiprocessing,time,csv,math,pprint
 from parsl.app.app import python_app
 from os.path import *
 from mappgene.subscripts import *
 
 @python_app(executors=['worker'])
 def run_ivar(params):
+
     subject_dir = params['work_dir']
     input_reads = params['input_reads']
     ivar_dir = join(subject_dir, 'ivar')
@@ -14,9 +15,18 @@ def run_ivar(params):
     raw_dir = join(ivar_dir, 'raw_data')
     smart_remove(raw_dir)
     smart_remove(output_dir)
+    smart_mkdir(raw_dir)
     smart_mkdir(output_dir)
     smart_mkdir(alignments_dir)
     reads = []
+
+    start_time = time.time()
+    print(f'''
+=====================================
+Starting iVar with subject {basename(subject_dir)}
+{get_time_date()}
+{pprint.pprint(params, width=1)}
+''')
 
     # Run fixq.sh
     for input_read in input_reads:
@@ -99,3 +109,8 @@ def run_ivar(params):
     smart_remove('snpEff_genes.txt')
     smart_remove('snpEff_summary.html')
 
+    print(f'''
+=====================================
+Finished iVar with subject {basename(subject_dir)}
+Total time: {get_time_string(time.time() - task_start_time)}
+''')

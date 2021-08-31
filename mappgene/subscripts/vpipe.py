@@ -13,6 +13,7 @@ def run_vpipe(params):
     raw_dir = join(vpipe_dir, 'samples/a/b/raw_data')
     smart_remove(raw_dir)
     smart_remove(output_dir)
+    smart_mkdir(raw_dir)
     smart_mkdir(output_dir)
     reads = []
 
