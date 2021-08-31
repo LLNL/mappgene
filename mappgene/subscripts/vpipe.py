@@ -78,9 +78,9 @@ Arguments:
 
     # Run snpEff postprocessing
     vcf_s0 = join(vpipe_dir, 'samples/a/b/variants/SNVs/snvs.vcf')
-    vcf_s1 = join(output_dir, f'{subject}.vcf')
-    vcf_s2 = join(output_dir, f'{subject}.snpEFF.vcf')
-    vcf_s3 = join(output_dir, f'{subject}.snpSIFT.txt')
+    vcf_s1 = join(output_dir, f'{subject}.vpipe.vcf')
+    vcf_s2 = join(output_dir, f'{subject}.vpipe.snpEFF.vcf')
+    vcf_s3 = join(output_dir, f'{subject}.vpipe.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +

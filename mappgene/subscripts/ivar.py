@@ -104,9 +104,9 @@ Arguments:
     run(f'lofreq call --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
 
     # Run snpEff postprocessing
-    vcf_s1 = join(output_dir, f'{subject}.vcf')
-    vcf_s2 = join(output_dir, f'{subject}.snpEFF.vcf')
-    vcf_s3 = join(output_dir, f'{subject}.snpSIFT.txt')
+    vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
+    vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
+    vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
