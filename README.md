@@ -1,6 +1,6 @@
 mappgene
 ===========
-[![PyPI version](https://badge.fury.io/py/mappgene.svg)](https://badge.fury.io/py/mappgene)
+[![PyPI version](https://badge.fury.io/py/mappgene.svg)](https://badge.fury.io/py/mappgene) [![DOI](https://zenodo.org/badge/367142630.svg)](https://zenodo.org/badge/latestdoi/367142630)
 
 mappgene is a SARS-CoV-2 genomic sequence analysis pipeline designed for high-performance parallel computing. It wraps V-pipe (https://github.com/cbg-ethz/V-pipe) and iVar (https://github.com/andersen-lab/ivar) with a collection of useful scripts for deployment in almost any Linux environment.
 
