@@ -8,6 +8,7 @@ from mappgene.subscripts import *
 def run_ivar(params):
 
     subject_dir = params['work_dir']
+    subject = basename(subject_dir)
     input_reads = params['input_reads']
     stdout = params['stdout']
     ivar_dir = join(subject_dir, 'ivar')
@@ -24,7 +25,7 @@ def run_ivar(params):
     start_time = time.time()
     start_str = f'''
 =====================================
-Starting iVar with subject: {basename(subject_dir)}
+Starting iVar with subject: {subject}
 {get_time_date()}
 Arguments: 
 {pprint.pformat(params, width=1)}
@@ -66,16 +67,16 @@ Arguments:
         raise Exception(f'Invalid reads: {reads}')
 
     
-    subject = join(alignments_dir, basename(subject_dir))
-    bam = replace_extension(subject, '.bam')
-    trimmed = replace_extension(subject, '.trimmed')
-    trimmed_sorted = replace_extension(subject, '.trimmed.sorted.bam')
-    variants = replace_extension(subject, '.variants')
-    masked = replace_extension(subject, '.masked.txt')
-    trimmed_masked = replace_extension(subject, '.trimmed.masked.bam')
-    final_masked = replace_extension(subject, '.final.masked.variants')
-    lofreq_bam = replace_extension(subject, '.lofreq.bam')
-    vcf_s0 = replace_extension(subject, '.vcf')
+    align_prefix = join(alignments_dir, subject)
+    bam = replace_extension(align_prefix, '.bam')
+    trimmed = replace_extension(align_prefix, '.trimmed')
+    trimmed_sorted = replace_extension(align_prefix, '.trimmed.sorted.bam')
+    variants = replace_extension(align_prefix, '.variants')
+    masked = replace_extension(align_prefix, '.masked.txt')
+    trimmed_masked = replace_extension(align_prefix, '.trimmed.masked.bam')
+    final_masked = replace_extension(align_prefix, '.final.masked.variants')
+    lofreq_bam = replace_extension(align_prefix, '.lofreq.bam')
+    vcf_s0 = replace_extension(align_prefix, '.vcf')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} ' +
         f'| samtools sort -o {bam}', params)
@@ -103,9 +104,9 @@ Arguments:
     run(f'lofreq call --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
 
     # Run snpEff postprocessing
-    vcf_s1 = join(output_dir, 'snvs_NC_045512.vcf')
-    vcf_s2 = join(output_dir, 'snvs_NC_045512.2.snpEFF.vcf')
-    vcf_s3 = join(output_dir, 'snvs_NC_045512.2.snpSIFT.txt')
+    vcf_s1 = join(output_dir, f'{subject}.vcf')
+    vcf_s2 = join(output_dir, f'{subject}.snpEFF.vcf')
+    vcf_s3 = join(output_dir, f'{subject}.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
@@ -120,7 +121,7 @@ Arguments:
     update_permissions(output_dir, params)
     finish_str = f'''
 =====================================
-Finished iVar with subject: {basename(subject_dir)}
+Finished iVar with subject: {subject}
 {get_time_date()}
 Arguments: 
 {pprint.pformat(params, width=1)}

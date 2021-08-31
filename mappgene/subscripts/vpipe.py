@@ -6,7 +6,9 @@ from mappgene.subscripts import *
 
 @python_app(executors=['worker'])
 def run_vpipe(params):
+
     subject_dir = params['work_dir']
+    subject = basename(subject_dir)
     input_reads = params['input_reads']
     stdout = params['stdout']
     vpipe_dir = join(subject_dir, 'vpipe')
@@ -21,7 +23,7 @@ def run_vpipe(params):
     start_time = time.time()
     start_str = f'''
 =====================================
-Starting V-pipe with subject: {basename(subject_dir)}
+Starting V-pipe with subject: {subject}
 {get_time_date()}
 Arguments: 
 {pprint.pformat(params, width=1)}
@@ -76,9 +78,9 @@ Arguments:
 
     # Run snpEff postprocessing
     vcf_s0 = join(vpipe_dir, 'samples/a/b/variants/SNVs/snvs.vcf')
-    vcf_s1 = join(output_dir, 'snvs_NC_045512.vcf')
-    vcf_s2 = join(output_dir, 'snvs_NC_045512.2.snpEFF.vcf')
-    vcf_s3 = join(output_dir, 'snvs_NC_045512.2.snpSIFT.txt')
+    vcf_s1 = join(output_dir, f'{subject}.vcf')
+    vcf_s2 = join(output_dir, f'{subject}.snpEFF.vcf')
+    vcf_s3 = join(output_dir, f'{subject}.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
@@ -101,7 +103,7 @@ Arguments:
     update_permissions(output_dir, params)
     finish_str = f'''
 =====================================
-Finished V-pipe with subject: {basename(subject_dir)}
+Finished V-pipe with subject: {subject}
 {get_time_date()}
 Arguments: 
 {pprint.pformat(params, width=1)}
