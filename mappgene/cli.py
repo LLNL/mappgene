@@ -21,16 +21,16 @@ def parse_args(args):
     parser.add_argument('--container', '-c', default=join(cwd, 'image.sif'),
         help='Path to Singularity container image.')
 
-    parser.add_argument('--read_length', default=250,
+    parser.add_argument('--read-length', default=250,
         help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
 
     parser.add_argument('--walltime', '-t', default='11:59:00',
         help='Walltime in format HH:MM:SS.')
 
-    parser.add_argument('--no_ivar', action='store_true',
+    parser.add_argument('--no-ivar', action='store_true',
         help='Disable ivar step.')
 
-    parser.add_argument('--no_vpipe', action='store_true',
+    parser.add_argument('--no-vpipe', action='store_true',
         help='Disable vpipe step.')
 
     parser.add_argument('--test', action='store_true',
