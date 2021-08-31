@@ -26,12 +26,13 @@ def run_vpipe(params):
         reads.append(f)
 
     # Deinterleave if only a single FASTQ was found
+    # fasta = join(vpipe_dir, 'references/PS_1200bp.fasta')
+    fasta = join(vpipe_dir, 'references/NC_045512.2.fasta')
     if len(reads) == 1:
         f = reads[0]
         out1 = replace_extension(f, '_R1.fastq.gz')
         out2 = replace_extension(f, '_R2.fastq.gz')
         stat = replace_extension(f, '.stat')
-        fasta = join(vpipe_dir, 'references/PS_1200bp.fasta')
         run(f"bbduk.sh in={f} out1={out1} out2={out2} ref={fasta} stats={stat} " +
             "k=13 ktrim=l hdist=2 restrictleft=31 statscolumns=5 minlen=65", params)
         smart_remove(f)

@@ -13,13 +13,21 @@ def run_ivar(params):
     smart_remove(raw_dir)
     reads = []
 
+    # Run fixq.sh
     for input_read in input_reads:
+        tmp_f = join(raw_dir, 'tmp_' + basename(input_read))
         f = join(raw_dir, basename(input_read))
         smart_copy(input_read, f)
+        run(f'zcat {f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
+            f' | gzip -c > {tmp_f}', params)
+        if exists(tmp_f):
+            smart_remove(f)
+            os.rename(tmp_f, f)
         reads.append(f)
 
     # Deinterleave if only a single FASTQ was found
-    fasta = join(ivar_dir, 'references/PS_1200bp.fasta')
+    # fasta = join(ivar_dir, 'references/PS_1200bp.fasta')
+    fasta = join(ivar_dir, 'references/NC_045512.2.fasta')
     if len(reads) == 1:
         f = reads[0]
         read1 = replace_extension(f, '_R1.fastq.gz')
@@ -27,7 +35,6 @@ def run_ivar(params):
         stat = replace_extension(f, '.stat')
         run(f"bbduk.sh in={f} out1={read1} out2={read2} ref={fasta} stats={stat} " +
             "k=13 ktrim=l hdist=2 restrictleft=31 statscolumns=5 minlen=65", params)
-        # run(f'reformat.sh in={f} out1={read1} out2={read2}', params)
         smart_remove(f)
     elif len(reads) == 2:
         reads.sort()
@@ -37,6 +44,8 @@ def run_ivar(params):
         raise Exception(f'Invalid reads: {reads}')
 
     output_dir = join(subject_dir, 'ivar_outputs')
+    smart_remove(output_dir)
+    smart_mkdir(output_dir)
     subject = join(output_dir, basename(subject_dir))
     bam = replace_extension(subject, '.bam')
     trimmed = replace_extension(subject, '.trimmed')
@@ -45,6 +54,8 @@ def run_ivar(params):
     masked = replace_extension(subject, '.masked.txt')
     trimmed_masked = replace_extension(subject, '.trimmed.masked.bam')
     final_masked = replace_extension(subject, '.final.masked.variants')
+    lofreq_bam = replace_extension(subject, '.lofreq.bam')
+    vcf = replace_extension(subject, '.vcf')
     smart_mkdir(output_dir)
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} ' +
@@ -66,6 +77,11 @@ def run_ivar(params):
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
         f'ivar variants -p {final_masked} -q 20 -t 0.03 -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
+
+    # # use lofreq to convert bam to vcf
+    run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
+    run(f'samtools index {lofreq_bam}', params)
+    run(f'lofreq call --call-indels -f {fasta} -o {vcf} --verbose {lofreq_bam}', params)
 
 
 
