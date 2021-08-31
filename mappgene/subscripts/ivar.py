@@ -107,11 +107,13 @@ Arguments:
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
     vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
     vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
+    vcf_s4 = join(output_dir, f'{subject}.ivar.variants.tsv')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
+    smart_copy(f'{variants}.tsv', vcf_s4)
 
     # Clear extra files
     smart_remove('snpEff_genes.txt')
