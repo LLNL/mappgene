@@ -88,7 +88,7 @@ def main():
     smart_copy(join(script_dir, 'data/extra_files'), tmp_dir)
 
     run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
-    update_permissions(base_params)
+    update_permissions(tmp_dir, base_params)
 
     if args.test:
         args.inputs = join(script_dir, 'data/example_inputs/*.fastq.gz')
@@ -166,7 +166,7 @@ def main():
         for r in results:
             r.result()
 
-    if args.vpipe:
+    elif args.vpipe:
         results =  []
         for params in all_params.values():
             results.append(run_vpipe(params))

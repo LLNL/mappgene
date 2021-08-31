@@ -45,10 +45,9 @@ mappgene --ivar <SUBJECT>_R1.fastq.gz <SUBJECT>_R1.fastq.gz
 ```
 
 ### Run V-pipe
-You can run iVar, V-pipe, or both.
+You can run either iVar or V-pipe.
 ```
 mappgene --vpipe <SUBJECT.FASTQ.GZ>
-mappgene --vpipe --ivar <SUBJECT.FASTQ.GZ>
 ```
 
 ### Slurm scheduling

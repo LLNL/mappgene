@@ -9,6 +9,7 @@ def run_ivar(params):
 
     subject_dir = params['work_dir']
     input_reads = params['input_reads']
+    stdout = params['stdout']
     ivar_dir = join(subject_dir, 'ivar')
     output_dir = join(subject_dir, 'ivar_outputs')
     alignments_dir = join(output_dir, 'alignments')
@@ -21,12 +22,18 @@ def run_ivar(params):
     reads = []
 
     start_time = time.time()
-    print(f'''
+    start_str = f'''
 =====================================
-Starting iVar with subject {basename(subject_dir)}
+Starting iVar with subject: {basename(subject_dir)}
 {get_time_date()}
-{pprint.pprint(params, width=1)}
-''')
+Arguments: 
+{pprint.pformat(params, width=1)}
+=====================================
+'''
+    write(stdout, start_str)
+    print(start_str)
+    update_permissions(ivar_dir, params)
+    update_permissions(output_dir, params)
 
     # Run fixq.sh
     for input_read in input_reads:
@@ -109,8 +116,16 @@ Starting iVar with subject {basename(subject_dir)}
     smart_remove('snpEff_genes.txt')
     smart_remove('snpEff_summary.html')
 
-    print(f'''
+    update_permissions(ivar_dir, params)
+    update_permissions(output_dir, params)
+    finish_str = f'''
 =====================================
-Finished iVar with subject {basename(subject_dir)}
-Total time: {get_time_string(time.time() - task_start_time)}
-''')
+Finished iVar with subject: {basename(subject_dir)}
+{get_time_date()}
+Arguments: 
+{pprint.pformat(params, width=1)}
+Total time: {get_time_string(time.time() - start_time)} (HH:MM:SS)
+=====================================
+'''
+    write(stdout, finish_str)
+    print(finish_str)

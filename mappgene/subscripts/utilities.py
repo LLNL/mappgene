@@ -96,7 +96,7 @@ def run(command, params=None, ignore_errors=False, print_output=True, print_time
     else:
         tokens = command.split(' ')
         if print_time:
-            print("Running {} took {} (h:m:s)".format(tokens[0], get_time_string(int(time.time()) - start, params)))
+            print("Running {} took {} (h:m:s)".format(tokens[0], get_time_string(int(time.time()) - start)))
             if len(tokens) > 1:
                 print("\tArgs: {}".format(' '.join(tokens[1:])))
     return line  # return the last output line
@@ -171,20 +171,18 @@ def write_error(path, output, params={}):
     write(path, 'Exception: ' + output, params)
     raise output
 
-def update_permissions(params):
+def update_permissions(directory, params):
     """Give user and group permissions to all generated files.
     """
     start_time = time.time()
-    work_dir = params['work_dir']
     stdout = params['stdout']
-    for directory in [work_dir]:
-        run("find {} -type f -print0 | xargs -0 -I _ chmod 770 _".format(directory), params)
-        run("find {} -type d -print0 | xargs -0 -I _ chmod 2770 _".format(directory), params)
-        if 'group' in params:
-            group = params['group']
-            run("find {} -type f -print0 | xargs -0 -I _ chgrp {} _".format(directory, group), params)
-            run("find {} -type d -print0 | xargs -0 -I _ chgrp {} _".format(directory, group), params)
-    write(stdout, "Updated file permissions, took {} (h:m:s)".format(get_time_string(time.time() - start_time, params)))
+    run("find {} -type f -print0 | xargs -0 -I _ chmod 770 _".format(directory), params)
+    run("find {} -type d -print0 | xargs -0 -I _ chmod 2770 _".format(directory), params)
+    if 'group' in params:
+        group = params['group']
+        run("find {} -type f -print0 | xargs -0 -I _ chgrp {} _".format(directory, group), params)
+        run("find {} -type d -print0 | xargs -0 -I _ chgrp {} _".format(directory, group), params)
+    write(stdout, "Updated file permissions, took {} (h:m:s)".format(get_time_string(time.time() - start_time)))
 
 def generate_checksum(input_dir):
     """Return checksum of subject input files. This ensures re-computation if inputs change.

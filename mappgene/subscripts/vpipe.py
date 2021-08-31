@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os,sys,glob,multiprocessing,time,csv,math
+import os,sys,glob,multiprocessing,time,csv,math,pprint
 from parsl.app.app import python_app
 from os.path import *
 from mappgene.subscripts import *
@@ -8,6 +8,7 @@ from mappgene.subscripts import *
 def run_vpipe(params):
     subject_dir = params['work_dir']
     input_reads = params['input_reads']
+    stdout = params['stdout']
     vpipe_dir = join(subject_dir, 'vpipe')
     output_dir = join(subject_dir, 'vpipe_outputs')
     raw_dir = join(vpipe_dir, 'samples/a/b/raw_data')
@@ -16,6 +17,20 @@ def run_vpipe(params):
     smart_mkdir(raw_dir)
     smart_mkdir(output_dir)
     reads = []
+
+    start_time = time.time()
+    start_str = f'''
+=====================================
+Starting V-pipe with subject: {basename(subject_dir)}
+{get_time_date()}
+Arguments: 
+{pprint.pformat(params, width=1)}
+=====================================
+'''
+    write(stdout, start_str)
+    print(start_str)
+    update_permissions(vpipe_dir, params)
+    update_permissions(output_dir, params)
 
     # Run fixq.sh
     for input_read in input_reads:
@@ -82,5 +97,17 @@ def run_vpipe(params):
     smart_remove('snpEff_genes.txt')
     smart_remove('snpEff_summary.html')
 
-
+    update_permissions(vpipe_dir, params)
+    update_permissions(output_dir, params)
+    finish_str = f'''
+=====================================
+Finished V-pipe with subject: {basename(subject_dir)}
+{get_time_date()}
+Arguments: 
+{pprint.pformat(params, width=1)}
+Total time: {get_time_string(time.time() - start_time)} (HH:MM:SS)
+=====================================
+'''
+    write(stdout, finish_str)
+    print(finish_str)
 
