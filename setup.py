@@ -8,8 +8,8 @@ src_path = join(src_path, 'mappgene')
 # ------------------------------------------------------------------------------
 setup(
     name='mappgene',
-    description='Genomic sequence analysis for HPC',
-    version='0.1.9',
+    description='Genomic sequence analysis for high-performance computing',
+    version='0.9.0',
     python_requires='>=3.7',
     author='Joseph Moon',
     author_email='moon15@llnl.gov',
@@ -23,7 +23,7 @@ setup(
     package_data={'mappgene' : ['data/*'] },
     install_requires=['pip>=21.2.4', 'parsl>=1.1.0', 'pytest>=6.2.4'],
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: BSD License",
         "Operating System :: POSIX :: Linux",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
