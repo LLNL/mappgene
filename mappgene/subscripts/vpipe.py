@@ -9,8 +9,11 @@ def run_vpipe(params):
     subject_dir = params['work_dir']
     input_reads = params['input_reads']
     vpipe_dir = join(subject_dir, 'vpipe')
+    output_dir = join(subject_dir, 'vpipe_outputs')
     raw_dir = join(vpipe_dir, 'samples/a/b/raw_data')
     smart_remove(raw_dir)
+    smart_remove(output_dir)
+    smart_mkdir(output_dir)
     reads = []
 
     # Run fixq.sh
@@ -56,11 +59,10 @@ def run_vpipe(params):
     time.sleep(10)
 
     # Run snpEff postprocessing
-    # smart_copy('/usr/WS2/moon15/old/mappgene_v1/output/example/work_dir/samples', f'{vpipe_dir}/samples')
     vcf_s0 = join(vpipe_dir, 'samples/a/b/variants/SNVs/snvs.vcf')
-    vcf_s1 = join(vpipe_dir, 'samples/a/b/variants/SNVs/snvs_NC_045512.vcf')
-    vcf_s2 = join(vpipe_dir, 'samples/a/b/variants/SNVs/snvs_NC_045512.2.snpEFF.vcf')
-    vcf_s3 = join(vpipe_dir, 'samples/a/b/variants/SNVs/snvs_NC_045512.2.snpSIFT.txt')
+    vcf_s1 = join(output_dir, 'snvs_NC_045512.vcf')
+    vcf_s2 = join(output_dir, 'snvs_NC_045512.2.snpEFF.vcf')
+    vcf_s3 = join(output_dir, 'snvs_NC_045512.2.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
@@ -68,7 +70,6 @@ def run_vpipe(params):
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
 
     # Copy outputs to accessible location
-    output_dir = join(subject_dir, 'vpipe_outputs')
     smart_copy(join(vpipe_dir, 'samples/a/b/alignments'), join(output_dir, 'alignments'))
     smart_copy(join(vpipe_dir, 'samples/a/b/variants'), join(output_dir, 'variants'))
     smart_copy(join(vpipe_dir, 'samples/a/b/extracted_data'), join(output_dir, 'extracted_data'), exclude=['*.gz', '*.fasta'])

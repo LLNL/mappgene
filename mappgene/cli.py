@@ -15,30 +15,27 @@ def parse_args(args):
         parser.add_argument('inputs', nargs='+',
             help='Paths to FASTQ input file(s).')
 
-    parser.add_argument('--outputs', '-o', default='mappgene_outputs/',
-        help='Path to output directory.')
-
-    parser.add_argument('--container', '-c', default=join(cwd, 'image.sif'),
-        help='Path to Singularity container image.')
-
-    parser.add_argument('--read-length', default=250,
-        help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
-
-    parser.add_argument('--walltime', '-t', default='11:59:00',
-        help='Walltime in format HH:MM:SS.')
-
-    parser.add_argument('--no-ivar', action='store_true',
-        help='Disable ivar step.')
-
-    parser.add_argument('--no-vpipe', action='store_true',
-        help='Disable vpipe step.')
-
     parser.add_argument('--test', action='store_true',
         help='Test using the example inputs.')
 
+    parser.add_argument('--ivar', action='store_true',
+        help='Run the iVar workflow.')
+
+    parser.add_argument('--vpipe', action='store_true',
+        help='Run the V-pipe workflow.')
+
+    parser.add_argument('--outputs', '-o', default='mappgene_outputs/',
+        help='Path to output directory.')
+
+    parser.add_argument('--container', default=join(cwd, 'image.sif'),
+        help='Path to Singularity container image.')
+
+    parser.add_argument('--read-length', default=130,
+        help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
+
     scheduler_group = parser.add_mutually_exclusive_group()
 
-    scheduler_group.add_argument('--slurm', '-s', action='store_true',
+    scheduler_group.add_argument('--slurm', action='store_true',
         help='Use the Slurm scheduler.')
 
     scheduler_group.add_argument('--flux', action='store_true',
@@ -53,11 +50,18 @@ def parse_args(args):
     parser.add_argument('--partition', '-p', default='pbatch',
         help='Slurm/Flux: partition to assign jobs.')
 
+    parser.add_argument('--walltime', '-t', default='11:59:00',
+        help='Slurm/Flux: walltime in format HH:MM:SS.')
+
     return parser.parse_args()
 
 def main():
 
     args = parse_args(sys.argv[1:])
+
+    if not args.vpipe and not args.ivar:
+        raise Exception(f"No workflow specified!\n\n" +
+            f"Specify --ivar and/or --vpipe\n")
 
     # Copy V-pipe repo as main working directory
     tmp_dir = join(cwd, 'tmp')
@@ -157,14 +161,14 @@ def main():
     parsl.set_stream_logger()
     parsl.load(config)
 
-    if not args.no_ivar:
+    if args.ivar:
         results =  []
         for params in all_params.values():
             results.append(run_ivar(params))
         for r in results:
             r.result()
 
-    if not args.no_vpipe:
+    if args.vpipe:
         results =  []
         for params in all_params.values():
             results.append(run_vpipe(params))

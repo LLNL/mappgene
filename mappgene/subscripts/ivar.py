@@ -9,8 +9,13 @@ def run_ivar(params):
     subject_dir = params['work_dir']
     input_reads = params['input_reads']
     ivar_dir = join(subject_dir, 'ivar')
+    output_dir = join(subject_dir, 'ivar_outputs')
+    alignments_dir = join(output_dir, 'alignments')
     raw_dir = join(ivar_dir, 'raw_data')
     smart_remove(raw_dir)
+    smart_remove(output_dir)
+    smart_mkdir(output_dir)
+    smart_mkdir(alignments_dir)
     reads = []
 
     # Run fixq.sh
@@ -43,10 +48,8 @@ def run_ivar(params):
     else:
         raise Exception(f'Invalid reads: {reads}')
 
-    output_dir = join(subject_dir, 'ivar_outputs')
-    smart_remove(output_dir)
-    smart_mkdir(output_dir)
-    subject = join(output_dir, basename(subject_dir))
+    
+    subject = join(alignments_dir, basename(subject_dir))
     bam = replace_extension(subject, '.bam')
     trimmed = replace_extension(subject, '.trimmed')
     trimmed_sorted = replace_extension(subject, '.trimmed.sorted.bam')
@@ -55,8 +58,7 @@ def run_ivar(params):
     trimmed_masked = replace_extension(subject, '.trimmed.masked.bam')
     final_masked = replace_extension(subject, '.final.masked.variants')
     lofreq_bam = replace_extension(subject, '.lofreq.bam')
-    vcf = replace_extension(subject, '.vcf')
-    smart_mkdir(output_dir)
+    vcf_s0 = replace_extension(subject, '.vcf')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} ' +
         f'| samtools sort -o {bam}', params)
@@ -81,9 +83,19 @@ def run_ivar(params):
     # # use lofreq to convert bam to vcf
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
     run(f'samtools index {lofreq_bam}', params)
-    run(f'lofreq call --call-indels -f {fasta} -o {vcf} --verbose {lofreq_bam}', params)
+    run(f'lofreq call --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
 
+    # Run snpEff postprocessing
+    vcf_s1 = join(output_dir, 'snvs_NC_045512.vcf')
+    vcf_s2 = join(output_dir, 'snvs_NC_045512.2.snpEFF.vcf')
+    vcf_s3 = join(output_dir, 'snvs_NC_045512.2.snpSIFT.txt')
+    run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
+    run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
+        f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
+        f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
 
-
-
+    # Clear extra files
+    smart_remove('snpEff_genes.txt')
+    smart_remove('snpEff_summary.html')
 
