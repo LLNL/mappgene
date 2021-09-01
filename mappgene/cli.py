@@ -33,7 +33,10 @@ def parse_args(args):
         help='Path to Singularity container image.')
 
     parser.add_argument('--read-length', default=130,
-        help='Read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
+        help='V-pipe: read length in sample.tsv (see cbg-ethz.github.io/V-pipe/tutorial/sars-cov2).')
+
+    parser.add_argument('--variant_frequency', default=0.01,
+        help='iVar: variant frequency cutoff.')
 
     scheduler_group = parser.add_mutually_exclusive_group()
 
@@ -68,6 +71,7 @@ def main():
         'container': abspath(args.container),
         'work_dir': tmp_dir,
         'read_length': args.read_length,
+        'variant_frequency': args.variant_frequency,
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
 

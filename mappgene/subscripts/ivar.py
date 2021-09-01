@@ -10,6 +10,7 @@ def run_ivar(params):
     subject_dir = params['work_dir']
     subject = basename(subject_dir)
     input_reads = params['input_reads']
+    variant_frequency = params['variant_frequency']
     stdout = params['stdout']
     ivar_dir = join(subject_dir, 'ivar')
     output_dir = join(subject_dir, 'ivar_outputs')
@@ -55,9 +56,7 @@ Arguments:
         f = reads[0]
         read1 = replace_extension(f, '_R1.fastq.gz')
         read2 = replace_extension(f, '_R2.fastq.gz')
-        stat = replace_extension(f, '.stat')
-        run(f"bbduk.sh in={f} out1={read1} out2={read2} ref={fasta} stats={stat} " +
-            "k=13 ktrim=l hdist=2 restrictleft=31 statscolumns=5 minlen=65", params)
+        run(f'reformat.sh in={f} out1={read1} out2={read2}', params)
         smart_remove(f)
     elif len(reads) == 2:
         reads.sort()
@@ -85,7 +84,7 @@ Arguments:
 
     # call variants with ivar
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_sorted} | ' +
-        f'ivar variants -p {variants} -q 20 -t 0.03 -r {fasta} ' +
+        f'ivar variants -p {variants} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
     # get primers with mismatches to reference
     run(f'ivar getmasked -i {variants}.tsv -b {ivar_dir}/nCoV-2019.bed ' +
@@ -95,7 +94,7 @@ Arguments:
         f'-t {masked} -b {ivar_dir}/nCoV-2019.bed', params)
     # call variants with reads with primer mismatches removed
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
-        f'ivar variants -p {final_masked} -q 20 -t 0.03 -r {fasta} ' +
+        f'ivar variants -p {final_masked} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
 
     # # use lofreq to convert bam to vcf
