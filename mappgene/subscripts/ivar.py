@@ -76,6 +76,8 @@ Arguments:
     final_masked = replace_extension(align_prefix, '.final.masked.variants')
     lofreq_bam = replace_extension(align_prefix, '.lofreq.bam')
     vcf_s0 = replace_extension(align_prefix, '.vcf')
+    tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
+    output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} ' +
         f'| samtools sort -o {bam}', params)
@@ -96,6 +98,7 @@ Arguments:
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
         f'ivar variants -p {final_masked} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
+    smart_copy(tsv, output_tsv)
 
     # # use lofreq to convert bam to vcf
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
@@ -106,13 +109,11 @@ Arguments:
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
     vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
     vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
-    vcf_s4 = join(output_dir, f'{subject}.ivar.variants.tsv')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
-    smart_copy(f'{variants}.tsv', vcf_s4)
 
     # Clear extra files
     smart_remove('snpEff_genes.txt')
