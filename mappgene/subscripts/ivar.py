@@ -80,8 +80,7 @@ Arguments:
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
     output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
     run(f'bwa index {fasta}', params)
-    run(f'bwa mem -t 8 {fasta} {read1} {read2} ' +
-        f'| samtools sort -o {bam}', params)
+    run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
     run(f'ivar trim -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
 
@@ -89,15 +88,19 @@ Arguments:
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_sorted} | ' +
         f'ivar variants -p {variants} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
+    
     # remove low quality insertions because we want to ignore most mismatches
     # to primers that are insertions (produces {subject}.noins.variants.tsv)
-    run(f'awk \'! ($4 ~ /^+/ && $10 <= 20) { print }\' < {variants}.tsv > {noinsertions}.tsv', params)
+    run(f"awk \'! (\\$4 ~ /^\\+/ && \\$10 >= 20) {{ print }}\' < {variants}.tsv > {noinsertions}.tsv", params)
+    
     # get primers with mismatches to reference (produces {subject}.masked.txt)
     run(f'ivar getmasked -i {noinsertions}.tsv -b {ivar_dir}/nCoV-2019.bed ' +
         f'-f {ivar_dir}/nCoV-2019.tsv -p {masked}', params)
+    
     # remove reads with primer mismatches (produces {subject}.trimmed.masked.bam)
     run(f'ivar removereads -i {trimmed_sorted} -p {trimmed_masked} ' +
         f'-t {masked} -b {ivar_dir}/nCoV-2019.bed', params)
+    
     # call variants with reads with primer mismatches removed (produces {subject}.final.masked.variants)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
         f'ivar variants -p {final_masked} -q 20 -t {variant_frequency} -r {fasta} ' +
