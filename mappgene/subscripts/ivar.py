@@ -71,6 +71,7 @@ Arguments:
     trimmed = replace_extension(align_prefix, '.trimmed')
     trimmed_sorted = replace_extension(align_prefix, '.trimmed.sorted.bam')
     variants = replace_extension(align_prefix, '.variants')
+    noinsertions = replace_extension(align_prefix, '.noins.variants')
     masked = replace_extension(align_prefix, '.masked.txt')
     trimmed_masked = replace_extension(align_prefix, '.trimmed.masked.bam')
     final_masked = replace_extension(align_prefix, '.final.masked.variants')
@@ -84,17 +85,20 @@ Arguments:
     run(f'ivar trim -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
 
-    # call variants with ivar
+    # call variants with ivar (produces {subject}.variants.tsv)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_sorted} | ' +
         f'ivar variants -p {variants} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
-    # get primers with mismatches to reference
-    run(f'ivar getmasked -i {variants}.tsv -b {ivar_dir}/nCoV-2019.bed ' +
+    # remove low quality insertions because we want to ignore most mismatches
+    # to primers that are insertions (produces {subject}.noins.variants.tsv)
+    run(f'awk \'! ($4 ~ /^+/ && $10 <= 20) { print }\' < {variants}.tsv > {noinsertions}.tsv', params)
+    # get primers with mismatches to reference (produces {subject}.masked.txt)
+    run(f'ivar getmasked -i {noinsertions}.tsv -b {ivar_dir}/nCoV-2019.bed ' +
         f'-f {ivar_dir}/nCoV-2019.tsv -p {masked}', params)
-    # remove reads with primer mismatches
+    # remove reads with primer mismatches (produces {subject}.trimmed.masked.bam)
     run(f'ivar removereads -i {trimmed_sorted} -p {trimmed_masked} ' +
         f'-t {masked} -b {ivar_dir}/nCoV-2019.bed', params)
-    # call variants with reads with primer mismatches removed
+    # call variants with reads with primer mismatches removed (produces {subject}.final.masked.variants)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
         f'ivar variants -p {final_masked} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
