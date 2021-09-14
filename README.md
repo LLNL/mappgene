@@ -4,6 +4,10 @@ mappgene
 
 mappgene is a SARS-CoV-2 genomic sequence analysis pipeline designed for high-performance parallel computing. It wraps V-pipe (https://github.com/cbg-ethz/V-pipe) and iVar (https://github.com/andersen-lab/ivar) with a collection of useful scripts for deployment in almost any Linux environment.
 
+Inputs: `.fastq.gz`
+
+Outputs: `.vcf` and `.snpSIFT.txt`
+
 
 ## Quick Setup
 
