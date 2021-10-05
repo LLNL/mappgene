@@ -4,6 +4,7 @@ From: ubuntu:18.04
 %post
     MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     SNPEFF=https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip
+    FATOVCF=https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
 
     apt-get -y update
     apt-get install -y wget locales git bash vim-tiny default-jre unzip perl zsh
@@ -19,6 +20,8 @@ From: ubuntu:18.04
     wget --no-check-certificate $SNPEFF
     unzip snpEff_latest_core.zip -d /opt
     java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
+    wget -O /opt/faToVcf "$FATOVCF"
+    chmod u+x /opt/faToVcf
 
 %environment
     __conda_setup="$('/opt/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
