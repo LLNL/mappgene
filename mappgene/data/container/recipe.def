@@ -7,7 +7,7 @@ From: ubuntu:18.04
     FATOVCF=https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
 
     apt-get -y update
-    apt-get install -y wget locales git bash vim-tiny default-jre unzip perl zsh
+    apt-get install -y wget locales git bash vim-tiny default-jre unzip perl zsh libcurl3
     locale-gen en_US.UTF-8
     rm /bin/sh
     ln -s /bin/bash /bin/sh
