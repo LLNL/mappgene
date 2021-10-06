@@ -76,6 +76,7 @@ Arguments:
     trimmed_masked = replace_extension(align_prefix, '.trimmed.masked.bam')
     final_masked = replace_extension(align_prefix, '.final.masked.variants')
     lofreq_bam = replace_extension(align_prefix, '.lofreq.bam')
+    sample_cons = replace_extension(align_prefix, '.consensus')
     vcf_s0 = replace_extension(align_prefix, '.vcf')
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
     output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
@@ -107,10 +108,19 @@ Arguments:
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
     smart_copy(tsv, output_tsv)
 
-    # # use lofreq to convert bam to vcf
+    # use lofreq to call variants (produces {subject}.lofreq.bam and {subject}.vcf)
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
     run(f'samtools index {lofreq_bam}', params)
     run(f'lofreq call --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
+
+    # create consensus sequence for comparing to reference genome (produces {subject}.consensus.fa)
+    run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {lofreq_bam} | ' +
+        f'ivar consensus -p {sample_cons}', params)
+
+    # create consensus vcf (produces {subject}.consensus.vcf)
+    # https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
+    run(f'awk 1 {fasta} {sample_cons}.fa | ' +
+        f'/opt/faToVcf /dev/stdin {sample_cons}.vcf', params)
 
     # Run snpEff postprocessing
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
