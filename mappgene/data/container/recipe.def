@@ -21,7 +21,7 @@ From: ubuntu:18.04
     unzip snpEff_latest_core.zip -d /opt
     java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
     wget -O /opt/faToVcf "$FATOVCF"
-    chmod u+x /opt/faToVcf
+    chmod 777 /opt/faToVcf
 
 %environment
     __conda_setup="$('/opt/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
