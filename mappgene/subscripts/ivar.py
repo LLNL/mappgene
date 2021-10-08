@@ -80,6 +80,7 @@ Arguments:
     vcf_s0 = replace_extension(align_prefix, '.vcf')
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
     output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
+    output_cons = join(output_dir, f'{subject}.ivar.consensus.vcf')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
     run(f'ivar trim -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
@@ -120,7 +121,7 @@ Arguments:
     # create consensus vcf (produces {subject}.consensus.vcf)
     # https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
     run(f'awk 1 {fasta} {sample_cons}.fa | ' +
-        f'/opt/faToVcf /dev/stdin {sample_cons}.vcf', params)
+        f'/opt/faToVcf /dev/stdin {output_cons}.vcf', params)
 
     # Run snpEff postprocessing
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
