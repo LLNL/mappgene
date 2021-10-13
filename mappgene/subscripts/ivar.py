@@ -120,8 +120,8 @@ Arguments:
 
     # create consensus vcf (produces {subject}.consensus.vcf)
     # https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
-    run(f'awk 1 {fasta} {sample_cons}.fa | ' +
-        f'/opt/faToVcf /dev/stdin {output_cons}.vcf', params)
+    # run(f'awk 1 {fasta} {sample_cons}.fa | ' +
+    #    f'/opt/faToVcf /dev/stdin {output_cons}.vcf', params)
 
     # Run snpEff postprocessing
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
