@@ -76,11 +76,10 @@ Arguments:
     trimmed_masked = replace_extension(align_prefix, '.trimmed.masked.bam')
     final_masked = replace_extension(align_prefix, '.final.masked.variants')
     lofreq_bam = replace_extension(align_prefix, '.lofreq.bam')
-    sample_cons = replace_extension(align_prefix, '.consensus')
     vcf_s0 = replace_extension(align_prefix, '.vcf')
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
     output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
-    output_cons = join(output_dir, f'{subject}.ivar.consensus.vcf')
+    output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
     run(f'ivar trim -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
@@ -116,12 +115,13 @@ Arguments:
 
     # create consensus sequence for comparing to reference genome (produces {subject}.consensus.fa)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {lofreq_bam} | ' +
-        f'ivar consensus -p {sample_cons}', params)
+        f'ivar consensus -p {output_fa}', params)
 
-    # create consensus vcf (produces {subject}.consensus.vcf)
-    # https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
-    # run(f'awk 1 {fasta} {sample_cons}.fa | ' +
-    #    f'/opt/faToVcf /dev/stdin {output_cons}.vcf', params)
+    # # create consensus vcf (produces {subject}.consensus.vcf)
+    # # https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
+    # output_cons = join(output_dir, f'{subject}.ivar.consensus.vcf')
+    # run(f'awk 1 {fasta} {output_fa}.fa | ' +
+    #    f'/opt/faToVcf /dev/stdin {output_cons}', params)
 
     # Run snpEff postprocessing
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
