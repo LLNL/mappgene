@@ -74,8 +74,10 @@ Arguments:
     noinsertions = replace_extension(align_prefix, '.noins.variants')
     masked = replace_extension(align_prefix, '.masked.txt')
     trimmed_masked = replace_extension(align_prefix, '.trimmed.masked.bam')
+    trimmed_masked_bedgraph = replace_extension(align_prefix, '.trimmed.masked.bedgraph')
     final_masked = replace_extension(align_prefix, '.final.masked.variants')
     lofreq_bam = replace_extension(align_prefix, '.lofreq.bam')
+    lofreq_bedgraph = replace_extension(align_prefix, '.lofreq.bedgraph')
     vcf_s0 = replace_extension(align_prefix, '.vcf')
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
     output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
@@ -102,7 +104,7 @@ Arguments:
     run(f'ivar removereads -i {trimmed_sorted} -p {trimmed_masked} ' +
         f'-t {masked} -b {ivar_dir}/nCoV-2019.bed', params)
     
-    # call variants with reads with primer mismatches removed (produces {subject}.final.masked.variants)
+    # call variants with reads with primer mismatches removed (produces {subject}.final.masked.variants.tsv)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
         f'ivar variants -p {final_masked} -q 20 -t {variant_frequency} -r {fasta} ' +
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
@@ -117,11 +119,10 @@ Arguments:
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {lofreq_bam} | ' +
         f'ivar consensus -p {output_fa}', params)
 
-    # # create consensus vcf (produces {subject}.consensus.vcf)
-    # # https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToVcf
-    # output_cons = join(output_dir, f'{subject}.ivar.consensus.vcf')
-    # run(f'awk 1 {fasta} {output_fa}.fa | ' +
-    #    f'/opt/faToVcf /dev/stdin {output_cons}', params)
+    # create bedgraphs of gene coverage (produces {subject}.lofreq.bedgraph and {subject}.trimmed.masked.bedgraph)
+    # https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html
+    run(f'bedtools genomecov -ibam {lofreq_bam} -bga > {lofreq_bedgraph}', params)
+    run(f'bedtools genomecov -ibam {trimmed_masked} -bga > {trimmed_masked_bedgraph}', params)
 
     # Run snpEff postprocessing
     vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
