@@ -81,6 +81,7 @@ Arguments:
     vcf_s0 = replace_extension(align_prefix, '.vcf')
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
     output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
+    output_vcf = join(output_dir, f'{subject}.ivar.final.masked.variants.vcf')
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
@@ -110,6 +111,9 @@ Arguments:
         f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
     smart_copy(tsv, output_tsv)
 
+    # convert ivar output to vcf (produces {subject}.final.masked.variants.vcf)
+    run(f'python /opt/ivar_variants_to_vcf.py {output_tsv} {output_vcf}', params)
+
     # use lofreq to call variants (produces {subject}.lofreq.bam and {subject}.vcf)
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
     run(f'samtools index {lofreq_bam}', params)
@@ -133,6 +137,19 @@ Arguments:
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
+
+    # //TODO: make this DRY
+    i_vcf_s1 = join(output_dir, f'{subject}.ivar.final.masked.variants.vcf1')
+    i_vcf_s2 = join(output_dir, f'{subject}.ivar.final.masked.variants.snpEFF.vcf')
+    i_vcf_s3 = join(output_dir, f'{subject}.ivar.final.masked.variants.snpSIFT.txt')
+    run(f'sed "s/MN908947.3/NC_045512.2/g" {output_vcf} > {i_vcf_s1}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 -noStats {i_vcf_s1} > {i_vcf_s2}', params)
+    run(f'cat {i_vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
+        f' extractFields - CHROM POS REF ALT "GEN[0].ALT_FREQ" DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
+        f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" ' +
+        f' FILTER "GEN[0].ALT_QUAL" | ' +
+        f' awk \'/^CHROM/ {{ sub(\\"GEN\\\\[0\\\\].ALT_FREQ\\", \\"AF\\"); \
+                            sub(\\"GEN\\\\[0\\\\].ALT_QUAL\\", \\"ALT_QUAL\\") }}1\' > {i_vcf_s3}', params)
 
     # Clear extra files
     smart_remove('snpEff_genes.txt')
