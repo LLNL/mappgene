@@ -11,7 +11,8 @@ def run_ivar(params):
     subject = basename(subject_dir)
     input_reads = params['input_reads']
     variant_frequency = params['variant_frequency']
-    read_cutoff = params['read_cutoff']
+    read_cutoff_bp = params['read_cutoff_bp']
+    primers_bp = params['primers_bp']
     stdout = params['stdout']
     ivar_dir = join(subject_dir, 'ivar')
     output_dir = join(subject_dir, 'ivar_outputs')
@@ -86,7 +87,7 @@ Arguments:
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
-    run(f'ivar trim -m {read_cutoff} -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
+    run(f'ivar trim -m {read_cutoff_bp} -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
 
     # call variants with ivar (produces {subject}.variants.tsv)
@@ -99,12 +100,12 @@ Arguments:
     run(f"awk \'! (\\$4 ~ /^\\+/ && \\$10 >= 20) {{ print }}\' < {variants}.tsv > {noinsertions}.tsv", params)
     
     # get primers with mismatches to reference (produces {subject}.masked.txt)
-    run(f'ivar getmasked -i {noinsertions}.tsv -b {ivar_dir}/nCoV-2019.bed ' +
-        f'-f {ivar_dir}/nCoV-2019.tsv -p {masked}', params)
+    run(f'ivar getmasked -i {noinsertions}.tsv -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.bed ' +
+        f'-f {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.tsv -p {masked}', params)
     
     # remove reads with primer mismatches (produces {subject}.trimmed.masked.bam)
     run(f'ivar removereads -i {trimmed_sorted} -p {trimmed_masked} ' +
-        f'-t {masked} -b {ivar_dir}/nCoV-2019.bed', params)
+        f'-t {masked} -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.bed', params)
     
     # call variants with reads with primer mismatches removed (produces {subject}.final.masked.variants.tsv)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
