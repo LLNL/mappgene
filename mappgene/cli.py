@@ -112,14 +112,18 @@ def main():
 
     # Copy reads to subject directory
     for input_read in args.inputs:
-        pair1 = input_read.replace('_R2.', '_R1.')
-        pair2 = input_read.replace('_R1.', '_R2.')
-        if '_R1.' in input_read and pair2 not in args.inputs:
+
+        pair1 = input_read.replace('_R2.', '_R1.').replace('_R2_', '_R1_')
+        pair2 = input_read.replace('_R1.', '_R2.').replace('_R1_', '_R2_')
+        if input_read != pair1 and pair2 not in args.inputs:
             raise Exception(f'Missing paired read: {pair2}')
-        if '_R2.' in input_read and pair1 not in args.inputs:
+        if input_read != pair2 and pair1 not in args.inputs:
             raise Exception(f'Missing paired read: {pair1}')
 
-        subject = replace_extension(basename(input_read).replace('_R1.', '.').replace('_R2.', '.'))
+        subject = replace_extension(basename(input_read)
+            .replace('_R1_', '_').replace('_R2_', '_')
+            .replace('_R1.', '.').replace('_R2.', '.')
+        )
         subject_dir = abspath(join(args.outputs, subject))
 
         if not subject in all_params:
