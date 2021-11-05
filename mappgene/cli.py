@@ -38,6 +38,9 @@ def parse_args(args):
     parser.add_argument('--variant_frequency', default=0.01,
         help='iVar: variant frequency cutoff.')
 
+    parser.add_argument('--read_cutoff', default=50,
+        help='iVar: keep reads greater than this number of base pairs.')
+
     scheduler_group = parser.add_mutually_exclusive_group()
 
     scheduler_group.add_argument('--slurm', action='store_true',
@@ -72,6 +75,7 @@ def main():
         'work_dir': tmp_dir,
         'read_length': args.read_length,
         'variant_frequency': args.variant_frequency,
+        'read_cutoff': args.read_cutoff,
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
 

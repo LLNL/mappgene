@@ -11,6 +11,7 @@ def run_ivar(params):
     subject = basename(subject_dir)
     input_reads = params['input_reads']
     variant_frequency = params['variant_frequency']
+    read_cutoff = params['read_cutoff']
     stdout = params['stdout']
     ivar_dir = join(subject_dir, 'ivar')
     output_dir = join(subject_dir, 'ivar_outputs')
@@ -85,7 +86,7 @@ Arguments:
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
-    run(f'ivar trim -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
+    run(f'ivar trim -m {read_cutoff} -b {ivar_dir}/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
 
     # call variants with ivar (produces {subject}.variants.tsv)
