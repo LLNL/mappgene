@@ -19,7 +19,7 @@ Outputs: `.vcf` and `.snpSIFT.txt`
 #### Installation
 ```
 pip3 install mappgene
-wget -O image.sif "https://www.dropbox.com/s/ymsfn9z7v3utqe0/image.sif?dl=1"
+singularity pull image.sif library://avilaherrera1/mappgene/image.sif:latest
 ```
 
 #### Usage

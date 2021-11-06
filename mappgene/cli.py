@@ -89,9 +89,9 @@ def main():
 
     if not exists(base_params['container']):
         raise Exception(f"Missing container image at {base_params['container']}\n\n" +
-            f"Either specify another image with --container\n\n" +
-            f"Or build the container with the recipe at: {join(script_dir, 'data/container/recipe.def')}\n\n" +
-            f"Or download the container at: https://www.dropbox.com/s/ymsfn9z7v3utqe0/image.sif?dl=1\n")
+            f"Either specify another image with --container\n" +
+            f"Or build the container with the recipe at: {join(script_dir, 'data/container/recipe.def')}\n" +
+            f"Or download the container with this command:\n\n$ singularity pull image.sif library://avilaherrera1/mappgene/image.sif:latest\n")
 
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
@@ -122,6 +122,7 @@ def main():
 
         subject = (basename(input_read)
             .replace('.fastq.gz', '')
+            .replace('.fastq', '')
             .replace('_R1', '')
             .replace('_R2', '')
             .replace('.', '_')
