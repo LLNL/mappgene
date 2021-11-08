@@ -38,7 +38,7 @@ def parse_args(args):
     parser.add_argument('--variant_frequency', default=0.01,
         help='iVar: variant frequency cutoff.')
 
-    parser.add_argument('--read_cutoff_bp', default=50,
+    parser.add_argument('--read_cutoff_bp', default=30,
         help='iVar: keep reads greater than this number of base pairs.')
 
     parser.add_argument('--primers_bp', default=400, choices={400, 1200},
