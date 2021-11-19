@@ -76,14 +76,14 @@ Arguments:
     noinsertions = replace_extension(align_prefix, '.noins.variants')
     masked = replace_extension(align_prefix, '.masked.txt')
     trimmed_masked = replace_extension(align_prefix, '.trimmed.masked.bam')
-    trimmed_masked_bedgraph = replace_extension(align_prefix, '.trimmed.masked.bedgraph')
+    trimmed_masked_bedgraph = join(output_dir, f'{subject}.ivar.bedgraph')
     final_masked = replace_extension(align_prefix, '.final.masked.variants')
     lofreq_bam = replace_extension(align_prefix, '.lofreq.bam')
-    lofreq_bedgraph = replace_extension(align_prefix, '.lofreq.bedgraph')
+    lofreq_bedgraph = join(output_dir, f'{subject}.ivar.lofreq.bedgraph')
     vcf_s0 = replace_extension(align_prefix, '.vcf')
     tsv = replace_extension(align_prefix, '.final.masked.variants.tsv')
-    output_tsv = join(output_dir, f'{subject}.ivar.final.masked.variants.tsv')
-    output_vcf = join(output_dir, f'{subject}.ivar.final.masked.variants.vcf')
+    output_vcf = join(alignments_dir, f'{subject}.ivar.vcf')
+    output_tsv = join(output_dir, f'{subject}.ivar.tsv')
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
     run(f'bwa mem -t 8 {fasta} {read1} {read2} | samtools sort -o {bam}', params)
@@ -131,9 +131,9 @@ Arguments:
     run(f'bedtools genomecov -ibam {trimmed_masked} -bga > {trimmed_masked_bedgraph}', params)
 
     # Run snpEff postprocessing
-    vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
-    vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
-    vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
+    vcf_s1 = join(output_dir, f'{subject}.ivar.lofreq.vcf')
+    vcf_s2 = join(output_dir, f'{subject}.ivar.lofreq.snpEFF.vcf')
+    vcf_s3 = join(output_dir, f'{subject}.ivar.lofreq.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
@@ -141,9 +141,9 @@ Arguments:
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
 
     # //TODO: make this DRY
-    i_vcf_s1 = join(output_dir, f'{subject}.ivar.final.masked.variants.vcf1')
-    i_vcf_s2 = join(output_dir, f'{subject}.ivar.final.masked.variants.snpEFF.vcf')
-    i_vcf_s3 = join(output_dir, f'{subject}.ivar.final.masked.variants.snpSIFT.txt')
+    i_vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
+    i_vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
+    i_vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {output_vcf} > {i_vcf_s1}', params)
     run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 -noStats {i_vcf_s1} > {i_vcf_s2}', params)
     run(f'cat {i_vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
@@ -170,3 +170,4 @@ Total time: {get_time_string(time.time() - start_time)} (HH:MM:SS)
 '''
     write(stdout, finish_str)
     print(finish_str)
+
