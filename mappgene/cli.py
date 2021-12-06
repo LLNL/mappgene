@@ -44,6 +44,9 @@ def parse_args(args):
     parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 400, 1200},
         help='iVar: use primer files with this number of base pairs.')
 
+    parser.add_argument('--depth_cap', default='3e5',
+        help='iVar: lofreq coverage depth cap.')
+
     scheduler_group = parser.add_mutually_exclusive_group()
 
     scheduler_group.add_argument('--slurm', action='store_true',
@@ -80,6 +83,7 @@ def main():
         'variant_frequency': args.variant_frequency,
         'read_cutoff_bp': args.read_cutoff_bp,
         'primers_bp': args.primers_bp,
+        'depth_cap': args.depth_cap,
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
 
