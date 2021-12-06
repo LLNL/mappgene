@@ -120,7 +120,7 @@ Arguments:
     # use lofreq to call variants (produces {subject}.lofreq.bam and {subject}.vcf)
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
     run(f'samtools index {lofreq_bam}', params)
-    run(f'lofreq call -d {depth_cap} --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
+    run(f'lofreq call -d {depth_cap} --verbose --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
 
     # create consensus sequence for comparing to reference genome (produces {subject}.consensus.fa)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {lofreq_bam} | ' +
