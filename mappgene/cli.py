@@ -83,7 +83,7 @@ def main():
         'variant_frequency': args.variant_frequency,
         'read_cutoff_bp': args.read_cutoff_bp,
         'primers_bp': args.primers_bp,
-        'depth_cap': args.depth_cap,
+        'depth_cap': float(args.depth_cap),
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
     }
 
