@@ -58,6 +58,9 @@ def parse_args(args):
     parser.add_argument('--nnodes', '-n', default=1,
         help='Slurm/Flux: number of nodes.')
 
+    parser.add_argument('--no_smart_memory', action='store_true',
+        help='Slurm/Flux: disable smart memory management.')
+
     parser.add_argument('--bank', '-b', default='asccasc',
         help='Slurm/Flux: bank to charge for jobs.')
 
@@ -143,10 +146,21 @@ def main():
         else:
             all_params[subject]['input_reads'].append(input_read)
 
+    # Memory management
+    if args.no_smart_memory:
+        mem_per_worker = None
+    else:
+        mem_per_worker = 0.1
+        for subject in all_params:
+            for input_read in all_params[subject]['input_reads']:
+                fastq_size = 2.0 * os.path.getsize(input_read) * 1.0E-9
+                mem_per_worker = max(mem_per_worker, fastq_size)
+
     if args.slurm:
         executor = parsl.executors.HighThroughputExecutor(
             label="worker",
             address=parsl.addresses.address_by_hostname(),
+            mem_per_worker=mem_per_worker,
             provider=parsl.providers.SlurmProvider(
                 args.partition,
                 launcher=parsl.launchers.SrunLauncher(),
@@ -163,6 +177,7 @@ def main():
         executor = parsl.executors.FluxExecutor(
             label="worker",
             flux_path="/usr/global/tools/flux/toss_3_x86_64_ib/flux-c0.28.0.pre-s0.17.0.pre/bin/flux",
+            mem_per_worker=mem_per_worker,
             provider=parsl.providers.SlurmProvider(
                 args.partition,
                 launcher=parsl.launchers.SrunLauncher(),
