@@ -117,6 +117,20 @@ Arguments:
     # convert ivar output to vcf (produces {subject}.final.masked.variants.vcf)
     run(f'python /opt/ivar_variants_to_vcf.py {output_tsv} {output_vcf}', params)
 
+    # run snpEff postprocessing on ivar output
+    i_vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
+    i_vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
+    i_vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
+    run(f'sed "s/MN908947.3/NC_045512.2/g" {output_vcf} > {i_vcf_s1}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 -noStats {i_vcf_s1} > {i_vcf_s2}', params)
+    run(f'cat {i_vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
+        f' extractFields - CHROM POS REF ALT "GEN[0].ALT_FREQ" DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
+        f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" ' +
+        f' FILTER "GEN[0].ALT_QUAL" | ' +
+        f' awk \'/^CHROM/ {{ sub(\\"GEN\\\\[0\\\\].ALT_FREQ\\", \\"AF\\"); \
+                            sub(\\"GEN\\\\[0\\\\].ALT_QUAL\\", \\"ALT_QUAL\\") }}1\' > {i_vcf_s3}', params)
+    run(f'bedtools genomecov -ibam {trimmed_masked} -bga > {trimmed_masked_bedgraph}', params)
+
     # use lofreq to call variants (produces {subject}.lofreq.bam and {subject}.vcf)
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
     run(f'samtools index {lofreq_bam}', params)
@@ -129,9 +143,8 @@ Arguments:
     # create bedgraphs of gene coverage (produces {subject}.lofreq.bedgraph and {subject}.trimmed.masked.bedgraph)
     # https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html
     run(f'bedtools genomecov -ibam {lofreq_bam} -bga > {lofreq_bedgraph}', params)
-    run(f'bedtools genomecov -ibam {trimmed_masked} -bga > {trimmed_masked_bedgraph}', params)
 
-    # Run snpEff postprocessing
+    # run snpEff postprocessing on lofreq output
     vcf_s1 = join(output_dir, f'{subject}.ivar.lofreq.vcf')
     vcf_s2 = join(output_dir, f'{subject}.ivar.lofreq.snpEFF.vcf')
     vcf_s3 = join(output_dir, f'{subject}.ivar.lofreq.snpSIFT.txt')
@@ -140,19 +153,6 @@ Arguments:
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)
-
-    # //TODO: make this DRY
-    i_vcf_s1 = join(output_dir, f'{subject}.ivar.vcf')
-    i_vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
-    i_vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
-    run(f'sed "s/MN908947.3/NC_045512.2/g" {output_vcf} > {i_vcf_s1}', params)
-    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 -noStats {i_vcf_s1} > {i_vcf_s2}', params)
-    run(f'cat {i_vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
-        f' extractFields - CHROM POS REF ALT "GEN[0].ALT_FREQ" DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
-        f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" ' +
-        f' FILTER "GEN[0].ALT_QUAL" | ' +
-        f' awk \'/^CHROM/ {{ sub(\\"GEN\\\\[0\\\\].ALT_FREQ\\", \\"AF\\"); \
-                            sub(\\"GEN\\\\[0\\\\].ALT_QUAL\\", \\"ALT_QUAL\\") }}1\' > {i_vcf_s3}', params)
 
     # Clear extra files
     smart_remove('snpEff_genes.txt')
@@ -171,4 +171,5 @@ Total time: {get_time_string(time.time() - start_time)} (HH:MM:SS)
 '''
     write(stdout, finish_str)
     print(finish_str)
+
 

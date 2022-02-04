@@ -18,13 +18,8 @@ def parse_args(args):
     parser.add_argument('--test', action='store_true',
         help='Test using the example inputs.')
 
-    workflow_group = parser.add_mutually_exclusive_group(required=True)
-
-    workflow_group.add_argument('--ivar', action='store_true',
-        help='Run the iVar workflow.')
-
-    workflow_group.add_argument('--vpipe', action='store_true',
-        help='Run the V-pipe workflow.')
+    parser.add_argument('--vpipe', action='store_true',
+        help='Run the V-pipe instead of iVar.')
 
     parser.add_argument('--outputs', '-o', default='mappgene_outputs/',
         help='Path to output directory.')
@@ -58,8 +53,8 @@ def parse_args(args):
     parser.add_argument('--nnodes', '-n', default=1,
         help='Slurm/Flux: number of nodes.')
 
-    parser.add_argument('--no_smart_memory', action='store_true',
-        help='Slurm/Flux: disable smart memory management.')
+    parser.add_argument('--use_full_node', action='store_true',
+        help='Slurm/Flux: use entire node for each subject, disabling per-task memory management.')
 
     parser.add_argument('--bank', '-b', default='asccasc',
         help='Slurm/Flux: bank to charge for jobs.')
@@ -76,9 +71,8 @@ def main():
 
     args = parse_args(sys.argv[1:])
 
-    # Copy V-pipe repo as main working directory
+
     tmp_dir = join(cwd, 'tmp')
-    vpipe_dir = join(tmp_dir, 'vpipe')
     base_params = {
         'container': abspath(args.container),
         'work_dir': tmp_dir,
@@ -102,11 +96,14 @@ def main():
 
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
-    
-    run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
     smart_copy(join(script_dir, 'data/extra_files'), tmp_dir)
-
-    run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
+    
+    if args.vpipe:
+        # Copy V-pipe repo as main working directory
+        vpipe_dir = join(tmp_dir, 'vpipe')
+        run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
+        run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
+    
     update_permissions(tmp_dir, base_params)
 
     if args.test:
@@ -146,20 +143,23 @@ def main():
         else:
             all_params[subject]['input_reads'].append(input_read)
 
-    # Memory management
-    if args.no_smart_memory:
-        mem_per_worker = None
+    if args.use_full_node:
+        cores_per_worker = int(os.cpu_count())
     else:
-        mem_per_worker = 0.1
-        for subject in all_params:
-            for input_read in all_params[subject]['input_reads']:
-                fastq_size = 2.0 * os.path.getsize(input_read) * 1.0E-9
-                mem_per_worker = max(mem_per_worker, fastq_size)
+        cores_per_worker = 1
+    
+    # Memory management
+    mem_per_worker = 0.1
+    for subject in all_params:
+        for input_read in all_params[subject]['input_reads']:
+            fastq_size = 2.0 * os.path.getsize(input_read) * 1.0E-9
+            mem_per_worker = max(mem_per_worker, fastq_size)
 
     if args.slurm:
         executor = parsl.executors.HighThroughputExecutor(
             label="worker",
             address=parsl.addresses.address_by_hostname(),
+            cores_per_worker=cores_per_worker,
             mem_per_worker=mem_per_worker,
             provider=parsl.providers.SlurmProvider(
                 args.partition,
@@ -177,6 +177,7 @@ def main():
         executor = parsl.executors.FluxExecutor(
             label="worker",
             flux_path="/usr/global/tools/flux/toss_3_x86_64_ib/flux-c0.28.0.pre-s0.17.0.pre/bin/flux",
+            cores_per_worker=cores_per_worker,
             mem_per_worker=mem_per_worker,
             provider=parsl.providers.SlurmProvider(
                 args.partition,
@@ -197,19 +198,19 @@ def main():
     parsl.set_stream_logger()
     parsl.load(config)
 
-    if args.ivar:
+    if args.vpipe:
+        results =  []
+        for params in all_params.values():
+            results.append(run_vpipe(params))
+        for r in results:
+            r.result()
+    else:
         results =  []
         for params in all_params.values():
             results.append(run_ivar(params))
         for r in results:
             r.result()
 
-    elif args.vpipe:
-        results =  []
-        for params in all_params.values():
-            results.append(run_vpipe(params))
-        for r in results:
-            r.result()
-
 if __name__ == '__main__':
     main()
+
