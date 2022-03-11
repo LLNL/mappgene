@@ -24,7 +24,7 @@ singularity pull image.sif library://avilaherrera1/mappgene/image.sif:latest
 
 #### Usage
 ```
-mappgene --ivar <SUBJECT.FASTQ.GZ>
+mappgene <SUBJECT.FASTQ.GZ>
 ```
 
 ## Instructions
@@ -32,24 +32,24 @@ mappgene --ivar <SUBJECT.FASTQ.GZ>
 #### Example Testing
 Check that mappgene works on your system by running the example input data, sourced from [here](https://github.com/cbg-ethz/V-pipe/tree/master/tests/data/sars-cov-2/pos_MN908947_3_1/20200729/raw_data).
 ```
-mappgene --ivar --test
+mappgene --test
 ```
 
 #### Multiple subjects
 You can specify multiple subjects with specific paths or Unix-style globbing
 ```
-mappgene --ivar <SUBJECT1.FASTQ.GZ> <SUBJECT2.FASTQ.GZ> <SUBJECT3.FASTQ.GZ>
-mappgene --ivar <SUBJECT_DIR>/*.fastq.gz
+mappgene <SUBJECT1.FASTQ.GZ> <SUBJECT2.FASTQ.GZ> <SUBJECT3.FASTQ.GZ>
+mappgene <SUBJECT_DIR>/*.fastq.gz
 ```
 
 #### Deinterleaved subjects
 If there are two subjects with matching names that end in `_R1.fastq.gz` and `_R2.fastq.gz`, mappgene will assume they are a deinterleaved pair.
 ```
-mappgene --ivar <SUBJECT>_R1.fastq.gz <SUBJECT>_R1.fastq.gz
+mappgene <SUBJECT>_R1.fastq.gz <SUBJECT>_R1.fastq.gz
 ```
 
 #### Run V-pipe
-You can run either iVar or V-pipe.
+You can run V-pipe instead of iVar.
 ```
 mappgene --vpipe <SUBJECT.FASTQ.GZ>
 ```
@@ -57,7 +57,7 @@ mappgene --vpipe <SUBJECT.FASTQ.GZ>
 #### Slurm scheduling
 Multiple subjects can be run on distributed systems using Slurm or Flux.
 ```
-mappgene --ivar --slurm -n 1 -b mybank -p mypartition <SUBJECT.FASTQ.GZ>
+mappgene --slurm -n 1 -b mybank -p mypartition <SUBJECT.FASTQ.GZ>
 ```
 
 #### Additional options
