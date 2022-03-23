@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os,sys,glob,multiprocessing,time,csv,math,pprint
+import os,sys,glob,multiprocessing,time,csv,math,pprint,psutil
 from parsl.app.app import python_app
 from os.path import *
 from mappgene.subscripts import *
@@ -134,7 +134,7 @@ Arguments:
     # use lofreq to call variants (produces {subject}.lofreq.bam and {subject}.vcf)
     run(f'lofreq indelqual --dindel -f {fasta} -o {lofreq_bam} --verbose {trimmed_masked}', params)
     run(f'samtools index {lofreq_bam}', params)
-    run(f'lofreq call -d {depth_cap} --verbose --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
+    run(f'lofreq call-parallel --pp-threads {psutil.cpu_count()} -d {depth_cap} --verbose --call-indels -f {fasta} -o {vcf_s0} --verbose {lofreq_bam}', params)
 
     # create consensus sequence for comparing to reference genome (produces {subject}.consensus.fa)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {lofreq_bam} | ' +
