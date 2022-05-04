@@ -48,12 +48,6 @@ If there are two subjects with matching names that end in `_R1.fastq.gz` and `_R
 mappgene <SUBJECT>_R1.fastq.gz <SUBJECT>_R1.fastq.gz
 ```
 
-#### Run V-pipe
-You can run V-pipe instead of iVar.
-```
-mappgene --vpipe <SUBJECT.FASTQ.GZ>
-```
-
 #### Slurm scheduling
 Multiple subjects can be run on distributed systems using Slurm or Flux.
 ```

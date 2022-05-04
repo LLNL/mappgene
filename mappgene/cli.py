@@ -18,9 +18,6 @@ def parse_args(args):
     parser.add_argument('--test', action='store_true',
         help='Test using the example inputs.')
 
-    parser.add_argument('--vpipe', action='store_true',
-        help='Run the V-pipe instead of iVar.')
-
     parser.add_argument('--outputs', '-o', default='mappgene_outputs/',
         help='Path to output directory.')
 
@@ -97,12 +94,6 @@ def main():
     smart_remove(tmp_dir)
     smart_mkdir(tmp_dir)
     smart_copy(join(script_dir, 'data/extra_files'), tmp_dir)
-    
-    if args.vpipe:
-        # Copy V-pipe repo as main working directory
-        vpipe_dir = join(tmp_dir, 'vpipe')
-        run(f'cp -rf /opt/vpipe {vpipe_dir}', base_params)
-        run(f'cd {vpipe_dir} && sh init_project.sh || true', base_params)
     
     update_permissions(tmp_dir, base_params)
 
@@ -198,18 +189,11 @@ def main():
     parsl.set_stream_logger()
     parsl.load(config)
 
-    if args.vpipe:
-        results =  []
-        for params in all_params.values():
-            results.append(run_vpipe(params))
-        for r in results:
-            r.result()
-    else:
-        results =  []
-        for params in all_params.values():
-            results.append(run_ivar(params))
-        for r in results:
-            r.result()
+    results =  []
+    for params in all_params.values():
+        results.append(run_ivar(params))
+    for r in results:
+        r.result()
 
 if __name__ == '__main__':
     main()

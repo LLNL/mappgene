@@ -19,7 +19,6 @@ From: ubuntu:18.04
     PATH=$PATH:/opt/miniconda/bin
     conda init bash
     conda create -n V-pipe -c conda-forge -c bioconda python=3.8.10 snakemake-minimal=5.14.0 ivar=1.3.1 samtools=1.12 bwa=0.7.17 bbmap=38.18 bcftools=1.12 lofreq=2.1.5
-    git clone -b v2.0.0 https://github.com/cbg-ethz/V-pipe.git /opt/vpipe
     wget --no-check-certificate $SNPEFF
     unzip snpEff_latest_core.zip -d /opt
     java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
