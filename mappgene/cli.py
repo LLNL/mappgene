@@ -39,7 +39,7 @@ def parse_args(args):
     parser.add_argument('--read_cutoff_bp', default=30,
         help='iVar: keep reads greater than this number of base pairs.')
 
-    parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 400, 1200},
+    parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 'v4', 'v4.1', 400, 1200},
         help='iVar: use primer files with this number of base pairs.')
 
     parser.add_argument('--depth_cap', default='3e5',
