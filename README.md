@@ -2,11 +2,11 @@ mappgene
 ===========
 [![PyPI version](https://badge.fury.io/py/mappgene.svg)](https://badge.fury.io/py/mappgene) [![DOI](https://zenodo.org/badge/367142630.svg)](https://zenodo.org/badge/latestdoi/367142630)
 
-mappgene is a SARS-CoV-2 genomic sequence analysis pipeline designed for high-performance parallel computing. It wraps V-pipe (https://github.com/cbg-ethz/V-pipe) and iVar (https://github.com/andersen-lab/ivar) with a collection of useful scripts for deployment in almost any Linux environment.
+mappgene is a SARS-CoV-2 genomic sequence analysis pipeline designed for high-performance parallel computing. It mainly wraps iVar (https://github.com/andersen-lab/ivar) and LoFreq (https://github.com/CSB5/lofreq) with a collection of useful scripts for deployment in almost any Linux environment.
 
 Inputs: `.fastq.gz`
 
-Outputs: `.vcf` and `.snpSIFT.txt`
+Outputs: `.vcf` and `.variants.tsv`
 
 
 ## Quick Setup
@@ -19,7 +19,7 @@ Outputs: `.vcf` and `.snpSIFT.txt`
 #### Installation
 ```
 pip3 install mappgene
-singularity pull image.sif library://avilaherrera1/mappgene/image.sif:latest
+singularity pull library://khyox/mappgene/image.sif:latest
 ```
 
 #### Usage
