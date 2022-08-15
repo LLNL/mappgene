@@ -18,7 +18,7 @@ def parse_args(args):
     parser.add_argument('--test', action='store_true',
         help='Test using the example inputs.')
     
-    parser.add_argument('--dedup', '-D', actions='store_true',
+    parser.add_argument('--dedup', '-D', action='store_true',
         help='Enable deduplication to drop the duplicated reads/pairs.')
     
     parser.add_argument('--threads', default=4, 
