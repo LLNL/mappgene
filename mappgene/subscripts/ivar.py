@@ -13,6 +13,7 @@ def run_ivar(params):
     variant_frequency = params['variant_frequency']
     read_cutoff_bp = params['read_cutoff_bp']
     threads = params['threads']
+    dedup = params['dedup']
     trim_front_tail = params['trim_front_tail']
     primers_bp = params['primers_bp']
     depth_cap = params['depth_cap']
@@ -92,7 +93,8 @@ Arguments:
     output_tsv = join(output_dir, f'{subject}.ivar.tsv')
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
-    run(f'fastp -i {read1} -I {read2} -o {r1_fastp} -O {r2_fastp} -D --trim_front1 {trim_front_tail} --trim_tail1 {trim_front_tail} -l 25 -w {threads} -h {sub_dir_fastp} 2>dev/null', params)
+    run_string: str = f'fastp -i {read1} -I {read2} -o {r1_fastp} -O {r2_fastp}' + ('-D' if dedup else '') + f'--trim_front1 {trim_front_tail} --trim_tail1 {trim_front_tail} -l 25 -w {threads} -h {sub_dir_fastp} 2>dev/null'
+    run(run_string, params)
     run(f'bwa mem -t 8 {fasta} {r1_fastp} {r2_fastp} | samtools sort -o {bam}', params)
     run(f'ivar trim -m {read_cutoff_bp} -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
