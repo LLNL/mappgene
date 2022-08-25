@@ -77,6 +77,7 @@ Arguments:
     r2_fastp = replace_extension(read2, '_R2_fastp_temp.fastq')
     sub_dir_fastp = replace_extension(subject_dir, '.fastp.html')
     bam = replace_extension(align_prefix, '.bam')
+    raw_bam = replace_extension(align_prefix, '.raw.bam')
     trimmed = replace_extension(align_prefix, '.trimmed')
     trimmed_sorted = replace_extension(align_prefix, '.trimmed.sorted.bam')
     variants = replace_extension(align_prefix, '.variants')
@@ -95,7 +96,8 @@ Arguments:
     run(f'bwa index {fasta}', params)
     run_string: str = f'fastp -i {read1} -I {read2} -o {r1_fastp} -O {r2_fastp}' + ('-D' if dedup else '') + f'--trim_front1 {trim_front_tail} --trim_tail1 {trim_front_tail} -l 25 -w {threads} -h {sub_dir_fastp} 2>dev/null'
     run(run_string, params)
-    run(f'bwa mem -t 8 {fasta} {r1_fastp} {r2_fastp} | samtools sort -o {bam}', params)
+    run(f'bwa mem -t 8 {fasta} {r1_fastp} {r2_fastp} | samtools sort -o {raw_bam}', params)
+    run(f'samtools view -F 2048 -b -o {bam} {raw_bam}', params)
     run(f'ivar trim -m {read_cutoff_bp} -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
 
