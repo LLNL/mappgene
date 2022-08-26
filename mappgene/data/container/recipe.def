@@ -2,27 +2,77 @@ Bootstrap: docker
 From: ubuntu:18.04
 
 %post
+    # Constants
     MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     SNPEFF=https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip
     # https://github.com/andersen-lab/ivar/issues/17
     # https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/ivar_variants_to_vcf.py
     IVAR_VCF=https://raw.githubusercontent.com/nf-core/viralrecon/ee5cbd676abb124a93cf43cd2467fc677c5d12a0/bin/ivar_variants_to_vcf.py
+    IVAR_VCF_LAST=https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/ivar_variants_to_vcf.py
 
+    # Install system packages
     apt-get -y update
     apt-get install -y wget locales git bash vim-tiny default-jre unzip perl zsh libcurl3
-    apt-get install bedtools  # https://bedtools.readthedocs.io/en/latest/content/installation.html
+    apt-get install -y bedtools  # https://bedtools.readthedocs.io/en/latest/content/installation.html
+    apt-get install -y build-essential autoconf autotools-dev  # Required by iVar
+
+    # Other local sytem configs
     locale-gen en_US.UTF-8
     rm /bin/sh
     ln -s /bin/bash /bin/sh
+
+    # (Mini)conda setup
     wget --no-check-certificate $MINICONDA
     sh Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
     PATH=$PATH:/opt/miniconda/bin
     conda init bash
-    conda create -n iVar -c conda-forge -c bioconda python=3.8.10 snakemake-minimal=5.14.0 ivar=1.3.1 samtools=1.12 bwa=0.7.17 bbmap=38.18 bcftools=1.12 lofreq=2.1.5 fastp=0.23.2
+    #conda update -n base -c defaults conda  # Not for now
+    conda create -n iVar -c conda-forge -c bioconda python=3.8.10 snakemake-minimal=5.14.0 htslib=1.15.1 samtools=1.15.1 bcftools=1.15.1 bwa=0.7.17 bbmap=38.18 lofreq=2.1.5 fastp=0.23.2 biopython=1.79 numpy=1.23.2 scipy=1.9.0
+
+    # Update shared libs location (needed by ivar to find htslib)
+    echo "/opt/miniconda/envs/iVar/lib" > /etc/ld.so.conf.d/ivar.conf
+    ldconfig
+
+    # Prepare environment for "conda activate"
+    __conda_setup="$('/opt/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+    if [ $? -eq 0 ]; then
+        eval "$__conda_setup"
+    else
+        if [ -f "/opt/miniconda/etc/profile.d/conda.sh" ]; then
+            . "/opt/miniconda/etc/profile.d/conda.sh"
+        else
+            export PATH="/opt/miniconda/bin:$PATH"
+        fi
+    fi
+    unset __conda_setup
+    conda activate iVar
+
+    # START ivar dev installation
+    git clone https://github.com/andersen-lab/ivar.git
+    cd ivar
+    ./autogen.sh
+    ./configure --with-hts=/opt/miniconda/envs/iVar
+    make -j 2
+    make install
+    cd /
+
+    # Install snpEff
     wget --no-check-certificate $SNPEFF
     unzip snpEff_latest_core.zip -d /opt
     java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
-    wget -O /opt/ivar_variants_to_vcf.py "$IVAR_VCF"
+
+    # Install ivar_variants_to_vcf script
+    wget -O /opt/ivar_variants_to_vcf.py "$IVAR_VCF_LAST"
+    chmod a+x /opt/ivar_variants_to_vcf.py
+
+
+%test
+    grep PRETTY /etc/os-release
+    lofreq version
+    ivar version
+    /opt/snpEff/exec/snpeff -version
+    /opt/ivar_variants_to_vcf.py -h
+
 
 %environment
     __conda_setup="$('/opt/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
