@@ -94,7 +94,7 @@ Arguments:
     output_tsv = join(output_dir, f'{subject}.ivar.tsv')
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
     run(f'bwa index {fasta}', params)
-    run_string: str = f'fastp -i {read1} -I {read2} -o {r1_fastp} -O {r2_fastp}' + ('-D' if dedup else '') + f'--trim_front1 {trim_front_tail} --trim_tail1 {trim_front_tail} -l 25 -w {threads} -h {sub_dir_fastp} 2>dev/null'
+    run_string: str = f'fastp -i {read1} -I {read2} -o {r1_fastp} -O {r2_fastp}' + (' -D' if dedup else '') + f' --trim_front1 {trim_front_tail} --trim_tail1 {trim_front_tail} -l 25 -w {threads} -h {sub_dir_fastp} 2>/dev/null'
     run(run_string, params)
     run(f'bwa mem -t 8 {fasta} {r1_fastp} {r2_fastp} | samtools sort -o {raw_bam}', params)
     run(f'samtools view -F 2048 -b -o {bam} {raw_bam}', params)
