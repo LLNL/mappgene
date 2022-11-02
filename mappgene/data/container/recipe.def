@@ -8,7 +8,7 @@ From: ubuntu:18.04
     # https://github.com/andersen-lab/ivar/issues/17
     # https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/ivar_variants_to_vcf.py
     IVAR_VCF=https://raw.githubusercontent.com/nf-core/viralrecon/ee5cbd676abb124a93cf43cd2467fc677c5d12a0/bin/ivar_variants_to_vcf.py
-    IVAR_VCF_LAST=https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/ivar_variants_to_vcf.py
+    IVAR_VCF_LAST_DEV=https://raw.githubusercontent.com/nf-core/viralrecon/dev/bin/ivar_variants_to_vcf.py
 
     # Install system packages
     apt-get -y update
@@ -62,7 +62,7 @@ From: ubuntu:18.04
     java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
 
     # Install ivar_variants_to_vcf script
-    wget -O /opt/ivar_variants_to_vcf.py "$IVAR_VCF_LAST"
+    wget -O /opt/ivar_variants_to_vcf.py "$IVAR_VCF_LAST_DEV"
     chmod a+x /opt/ivar_variants_to_vcf.py
 
 
