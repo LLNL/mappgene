@@ -9,6 +9,7 @@ From: ubuntu:18.04
     # https://raw.githubusercontent.com/nf-core/viralrecon/master/bin/ivar_variants_to_vcf.py
     IVAR_VCF=https://raw.githubusercontent.com/nf-core/viralrecon/ee5cbd676abb124a93cf43cd2467fc677c5d12a0/bin/ivar_variants_to_vcf.py
     IVAR_VCF_LAST_DEV=https://raw.githubusercontent.com/nf-core/viralrecon/dev/bin/ivar_variants_to_vcf.py
+    IVAR=https://github.com/khyox/ivar #https://github.com/andersen-lab/ivar.git 
 
     # Install system packages
     apt-get -y update
@@ -48,7 +49,7 @@ From: ubuntu:18.04
     conda activate iVar
 
     # START ivar dev installation
-    git clone https://github.com/andersen-lab/ivar.git
+    git clone $IVAR
     cd ivar
     ./autogen.sh
     ./configure --with-hts=/opt/miniconda/envs/iVar
