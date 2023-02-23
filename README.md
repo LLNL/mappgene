@@ -64,3 +64,11 @@ License
 Mappgene is distributed under the terms of the BSD-3 License.
 
 LLNL-CODE-821512
+
+____
+You may be interested in [MappgeneSummary](https://github.com/LLNL/mappgenesummary), a package for the analysis and summarization of mappgene's results.
+
+If you use mappgene in your research, please cite the paper. Thanks!
+
+Kimbrel J, Moon J, Avila-Herrera A, Martí JM, Thissen J, Mulakken N, Sandholtz SH, Ferrell T, Daum C, Hall S, Segelke B, Arrildt KT, Messenger S, Wadford DA, Jaing C, Allen JE, Borucki MK. Multiple Mutations Associated with Emergent Variants Can Be Detected as Low-Frequency Mutations in Early SARS-CoV-2 Pandemic Clinical Samples. Viruses. 2022; 14(12):2775. https://doi.org/10.3390/v14122775
+____
