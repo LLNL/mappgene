@@ -1,18 +1,22 @@
 import sys
-from os.path import abspath, split, join
+from pathlib import Path
 from setuptools import setup, find_packages
 
-src_path = split(abspath(sys.argv[0]))[0]
-src_path = join(src_path, 'mappgene')
+this_dir = Path(__file__).parent
+src_path = this_dir / "mappgene"
+long_desc = (this_dir / "README.md").read_text()
 
 # ------------------------------------------------------------------------------
 setup(
     name='mappgene',
     description='Genomic sequence analysis for high-performance computing',
-    version='1.2.1',
+    long_description=long_desc,
+    long_description_content_type='text/markdown',
+    version='1.3.0',
     python_requires='>=3.7',
     author='Joseph Moon',
-    author_email='moon15@llnl.gov',
+    maintainer='Aram Avila-Herrera',  # TODO: replace with mailing list?
+    maintainer_email='avilaherrera1@llnl.gov',
     entry_points={
         'console_scripts': [
             'mappgene = mappgene.cli:main'
@@ -20,7 +24,7 @@ setup(
     },
     packages=find_packages(),
     include_package_data=True,
-    package_data={'mappgene' : ['data/*'] },
+    package_data={'mappgene': ['data/*']},
     install_requires=['pip>=21.2.4', 'parsl>=1.1.0', 'pytest>=6.2.4'],
     classifiers=[
         "Development Status :: 4 - Beta",
