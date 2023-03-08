@@ -12,7 +12,7 @@ setup(
     description='Genomic sequence analysis for high-performance computing',
     long_description=long_desc,
     long_description_content_type='text/markdown',
-    version='1.3.0',
+    version='1.3.1',
     python_requires='>=3.7',
     author='Joseph Moon',
     maintainer='Aram Avila-Herrera',  # TODO: replace with mailing list?
