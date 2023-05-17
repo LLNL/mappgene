@@ -13,7 +13,7 @@ From: ubuntu:18.04
 
     # Install system packages
     apt-get -y update
-    apt-get install -y wget locales git bash vim-tiny default-jre unzip perl zsh libcurl3
+    apt-get install -y curl wget locales git bash vim-tiny default-jre unzip perl zsh libcurl3
     apt-get install -y bedtools  # https://bedtools.readthedocs.io/en/latest/content/installation.html
     apt-get install -y build-essential autoconf autotools-dev  # Required by iVar
 
@@ -61,6 +61,12 @@ From: ubuntu:18.04
     wget --no-check-certificate $SNPEFF
     unzip snpEff_latest_core.zip -d /opt
     java -jar /opt/snpEff/snpEff.jar download -v NC_045512.2
+
+    # Build ZIKV databases for snpEff
+    cd /opt/snpEff
+    scripts/buildDbNcbi.sh KU501215.1  # PRVABC59
+    scripts/buildDbNcbi.sh KU955593.1  # FSS13025 Cambodia
+    cd -
 
     # Install ivar_variants_to_vcf script
     wget -O /opt/ivar_variants_to_vcf.py "$IVAR_VCF_LAST_DEV"
