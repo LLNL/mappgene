@@ -42,11 +42,20 @@ def parse_args(args):
     parser.add_argument('--read_cutoff_bp', default=30,
         help='iVar: keep reads greater than this number of base pairs.')
 
-    parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 'v4', 'v4.1', 'combo_3_4.1', 400, 1200},
-        help='iVar: use primer files with this number of base pairs.')
+    parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 'v4', 'v4.1', 'combo_3_4.1', 'zibra_KU501215.1', 'zibra_KU955593.1', 400, 1200},
+        help='iVar: use primers in packaged data directory with this suffix.')
 
     parser.add_argument('--depth_cap', default='3e5',
         help='iVar: lofreq coverage depth cap.')
+
+    parser.add_argument('--no_ncov', help="don't use hardcoded 'nCoV-2019' primer file names")
+    parser.add_argument('--fixq', action=store_true)
+    parser.add_argument('--no-fixq', action=store_false, dest='fixq')
+    parser.set_defaults(fixq=True)
+    parser.add_argument('--gff', default="GCF_009858895.2_ASM985889v3_genomic.gff",
+        help="the basename of the packaged gff reference annotation file",
+    parser.add_argument('--reference_accession', default="NC_045512.2",
+        help="the accession of the packaged reference genome")
 
     scheduler_group = parser.add_mutually_exclusive_group()
 
@@ -91,6 +100,11 @@ def main():
         'threads': int(args.threads),
         'trim_front_tail': int(args.trim_front_tail),
         'stdout': abspath(join(args.outputs, 'mappgene.stdout')),
+        'fixq': args.fixq,
+        'no_ncov': args.no_ncov,
+        'gff': args.gff,
+        'reference_accession': args.reference_accession
+        
     }
 
     if shutil.which('singularity') is None:
