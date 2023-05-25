@@ -13,7 +13,7 @@ From: ubuntu:18.04
 
     # Install system packages
     apt-get -y update
-    apt-get install -y curl wget locales git bash vim-tiny default-jre unzip perl zsh libcurl3
+    apt-get install -y curl wget locales git bash vim-tiny default-jre unzip perl zsh
     apt-get install -y bedtools  # https://bedtools.readthedocs.io/en/latest/content/installation.html
     apt-get install -y build-essential autoconf autotools-dev  # Required by iVar
 
