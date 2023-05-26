@@ -48,21 +48,21 @@ Arguments:
     update_permissions(output_dir, params)
 
     # Run fixq.sh
-    if run_fixq:
-        for input_read in input_reads:
-            tmp_f = join(raw_dir, 'tmp_' + basename(input_read))
-            f = join(raw_dir, basename(input_read))
-            smart_copy(input_read, f)
+    for input_read in input_reads:
+        tmp_f = join(raw_dir, 'tmp_' + basename(input_read))
+        f = join(raw_dir, basename(input_read))
+        smart_copy(input_read, f)
+        if run_fixq:
             run(f'zcat {f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
                 f' | gzip -c > {tmp_f}', params)
-            if exists(tmp_f):
-                smart_remove(f)
-                os.rename(tmp_f, f)
-            reads.append(f)
+        if exists(tmp_f):
+            smart_remove(f)
+            os.rename(tmp_f, f)
+        reads.append(f)
 
     # Deinterleave if only a single FASTQ was found
     # fasta = join(ivar_dir, 'references/PS_1200bp.fasta')
-    fasta = join(ivar_dir, 'references/{ivar_ref}')
+    fasta = join(ivar_dir, f'references/{ivar_ref}.fasta')
     if len(reads) == 1:
         f = reads[0]
         read1 = replace_extension(f, '_R1.fastq.gz')
@@ -141,7 +141,7 @@ Arguments:
     i_vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
     i_vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {output_vcf} > {i_vcf_s1}', params)
-    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar {reference_accession} -noStats {i_vcf_s1} > {i_vcf_s2}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar {ivar_ref} -noStats {i_vcf_s1} > {i_vcf_s2}', params)
     run(f'cat {i_vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT "GEN[0].ALT_FREQ" DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" ' +
@@ -168,7 +168,7 @@ Arguments:
     vcf_s2 = join(output_dir, f'{subject}.ivar.lofreq.snpEFF.vcf')
     vcf_s3 = join(output_dir, f'{subject}.ivar.lofreq.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
-    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar {reference_accession} {vcf_s1} > {vcf_s2}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar {ivar_ref} {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)

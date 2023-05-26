@@ -43,17 +43,17 @@ def parse_args(args):
         help='iVar: keep reads greater than this number of base pairs.')
 
     parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 'v4', 'v4.1', 'combo_3_4.1', 'zibra_KU501215.1', 'zibra_KU955593.1', 400, 1200},
-        help='iVar: use primers in packaged data directory with this suffix.')
+        help='iVar: use primer files with this number of base pairs.')
 
     parser.add_argument('--depth_cap', default='3e5',
         help='iVar: lofreq coverage depth cap.')
 
-    parser.add_argument('--no_ncov', help="don't use hardcoded 'nCoV-2019' primer file names")
-    parser.add_argument('--fixq', action=store_true)
-    parser.add_argument('--no-fixq', action=store_false, dest='fixq')
+    parser.add_argument('--no_ncov', action='store_true', help="don't use hardcoded 'nCoV-2019' primer file names")
+    parser.add_argument('--fixq', action='store_true')
+    parser.add_argument('--no-fixq', action='store_false', dest='fixq')
     parser.set_defaults(fixq=True)
     parser.add_argument('--gff', default="GCF_009858895.2_ASM985889v3_genomic.gff",
-        help="the basename of the packaged gff reference annotation file",
+        help="the basename of the packaged gff reference annotation file")
     parser.add_argument('--reference_accession', default="NC_045512.2",
         help="the accession of the packaged reference genome")
 
