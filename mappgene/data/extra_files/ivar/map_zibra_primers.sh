@@ -33,12 +33,13 @@ map_primers(){
 
 map_zibra_primers(){
     local _acc="$1"
+    local _primers_dir="primers_zibra_${_acc}bp"
 
-    mkdir -p "primers_zibra_${_acc}"
-    map_primers "references/${_acc}.fasta" zibra.fa > "primers_zibra_${_acc}"/blast.tsv
+    mkdir -p "$_primers_dir"
+    map_primers "references/${_acc}.fasta" zibra.fa > "${_primers_dir}/blast.tsv"
 
     # drop score columns and add dummy pool numbers (0)
-    cd "primers_zibra_${_acc}"
+    cd "$_primers_dir"
     awk -v OFS=$'\t' '{
                           gsub(/plus/, "+", $5);
                           gsub(/minus/, "-", $5);
@@ -53,3 +54,4 @@ map_zibra_primers(){
 
 map_zibra_primers KU501215.1
 map_zibra_primers KU955593.1
+map_zibra_primers KX087101.3

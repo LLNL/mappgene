@@ -65,6 +65,7 @@ From: ubuntu:18.04
     # Build ZIKV databases for snpEff
     cd /opt/snpEff
     scripts/buildDbNcbi.sh KU501215.1  # PRVABC59
+    scripts/buildDbNcbi.sh KX087101.3  # PRVABC59 Reference used in Grubaugh 2019
     scripts/buildDbNcbi.sh KU955593.1  # FSS13025 Cambodia
     cd -
 
