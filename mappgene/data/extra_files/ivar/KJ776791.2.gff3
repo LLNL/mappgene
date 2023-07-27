@@ -1,0 +1,10 @@
+##gff-version 3
+#!gff-spec-version 1.21
+#!processor NCBI annotwriter
+##sequence-region KJ776791.2 1 10807
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=64320
+KJ776791.2	Genbank	region	1	10807	.	+	.	ID=KJ776791.2:1..10807;Dbxref=taxon:64320;collection-date=28-Nov-2013;country=French Polynesia;gbkey=Src;genome=genomic;genotype=Asian;isolation-source=Vero cells;mol_type=genomic RNA;nat-host=Homo sapiens;note=EVA 1011;strain=H/PF/2013
+KJ776791.2	Genbank	five_prime_UTR	1	107	.	+	.	ID=id-KJ776791.2:1..107;gbkey=5'UTR
+KJ776791.2	Genbank	CDS	108	10379	.	+	0	ID=cds-AHZ13508.1;Dbxref=NCBI_GP:AHZ13508.1;Name=AHZ13508.1;gbkey=CDS;product=polyprotein;protein_id=AHZ13508.1
+KJ776791.2	Genbank	three_prime_UTR	10380	10807	.	+	.	ID=id-KJ776791.2:10380..10807;gbkey=3'UTR
+

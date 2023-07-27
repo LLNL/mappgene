@@ -67,6 +67,7 @@ From: ubuntu:18.04
     scripts/buildDbNcbi.sh KU501215.1  # PRVABC59
     scripts/buildDbNcbi.sh KX087101.3  # PRVABC59 Reference used in Grubaugh 2019
     scripts/buildDbNcbi.sh KU955593.1  # FSS13025 Cambodia
+    scripts/buildDbNcbi.sh KJ776791.2  # Theys et al. 2017 PLOS Pathogens
     cd -
 
     # Install ivar_variants_to_vcf script

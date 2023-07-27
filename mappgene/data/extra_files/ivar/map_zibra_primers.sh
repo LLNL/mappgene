@@ -39,7 +39,7 @@ map_zibra_primers(){
     map_primers "references/${_acc}.fasta" zibra.fa > "${_primers_dir}/blast.tsv"
 
     # drop score columns and add dummy pool numbers (0)
-    cd "$_primers_dir"
+    cd "$_primers_dir" || return 1
     awk -v OFS=$'\t' '{
                           gsub(/plus/, "+", $5);
                           gsub(/minus/, "-", $5);
@@ -49,9 +49,10 @@ map_zibra_primers(){
     sort -Vk4 primers.bed \
     | awk '  NR%2  {prev=$4}
            !(NR%2) {print prev, "\t", $4}' > pairinfo.tsv
-    cd -
+    cd - || return 1
 }
 
 map_zibra_primers KU501215.1
 map_zibra_primers KU955593.1
 map_zibra_primers KX087101.3
+map_zibra_primers KJ776791.2
