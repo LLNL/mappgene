@@ -17,7 +17,7 @@ tabular text output
 ## Quick Start
 
 ```bash
-singularity pull library://khyox/mappgene/image.sif:latest
+singularity pull library://avilaherrera1/mappgene/image.sif:latest
 git clone https://github.com/LLNL/mappgene.git
 pip install git+file:///absolute/path/to/mappgene
 mappgene --container image.sif --outputs outputs samples/*fastq.gz
@@ -48,10 +48,10 @@ It contains the pipeline components and dependencies.
 - See `mappgene/data/container/recipe.def` for more details
 
 ```bash
-singularity pull library://khyox/mappgene/image.sif:latest
+singularity pull library://avilaherrera1/mappgene/image.sif:latest
 ```
 
-Or go to <https://cloud.sylabs.io/library/khyox/mappgene/image.sif> and click
+Or go to <https://cloud.sylabs.io/library/avilaherrera1/mappgene/image.sif> and click
 "Download".
 
 ### Example Testing
@@ -81,6 +81,11 @@ Key options:
 - `--depth_cap`: sets `lofreq call -d` value (read no more than this many reads per position)
 - `--read_cutoff_bp`: sets `ivar trim -m` value (remove reads smaller than this after trimming)
 - `--variant_frequency`: sets `ivar variants -t` value (do not call variants below this frequency)
+- `--no_ncov` : do not use the built-in Sars-CoV-2 references and primers.
+- `--fixq`, `--no-fixq`: do or do not apply opinionated base quality score
+  adjustments (default is to adjust). See [Known bugs and quirks](#known-bugs-and-quirks).
+- `--gff`: basename of bundled gff3 reference genome annotation file
+- `--reference_accession`: accession of bundled reference genome
 
 ## Instructions
 
@@ -165,7 +170,7 @@ mappgene_outputs/
   and high scores to the lower bound of those categories, i.e., Q37->Q30 and
   Q25->Q20. This affects `lofreq`, a quality-aware variant caller, by making it
   require more evidence (i.e., depth of read coverage) to call variants vs.
-  sequencing errors.
+  sequencing errors. See `--fixq`, and `--no-fixq` options.
 
 License
 -------

@@ -18,6 +18,10 @@ def run_ivar(params):
     primers_bp = params['primers_bp']
     depth_cap = params['depth_cap']
     stdout = params['stdout']
+    run_fixq = params['fixq']
+    no_ncov = params['no_ncov']
+    ivar_gff = params.get('gff', 'GCF_009858895.2_ASM985889v3_genomic.gff')
+    ivar_ref = params.get('reference_accession', 'NC_045512.2')
     ivar_dir = join(subject_dir, 'ivar')
     output_dir = join(subject_dir, 'ivar_outputs')
     alignments_dir = join(output_dir, 'alignments')
@@ -48,8 +52,9 @@ Arguments:
         tmp_f = join(raw_dir, 'tmp_' + basename(input_read))
         f = join(raw_dir, basename(input_read))
         smart_copy(input_read, f)
-        run(f'zcat {f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
-            f' | gzip -c > {tmp_f}', params)
+        if run_fixq:
+            run(f'zcat {f} | awk \'NR%4 == 0 {{ gsub(\\"F\\", \\"?\\"); gsub(\\":\\", \\"5\\") }}1\'' +
+                f' | gzip -c > {tmp_f}', params)
         if exists(tmp_f):
             smart_remove(f)
             os.rename(tmp_f, f)
@@ -57,7 +62,7 @@ Arguments:
 
     # Deinterleave if only a single FASTQ was found
     # fasta = join(ivar_dir, 'references/PS_1200bp.fasta')
-    fasta = join(ivar_dir, 'references/NC_045512.2.fasta')
+    fasta = join(ivar_dir, f'references/{ivar_ref}.fasta')
     if len(reads) == 1:
         f = reads[0]
         read1 = replace_extension(f, '_R1.fastq.gz')
@@ -93,35 +98,39 @@ Arguments:
     output_vcf = join(alignments_dir, f'{subject}.ivar.vcf')
     output_tsv = join(output_dir, f'{subject}.ivar.tsv')
     output_fa = join(output_dir, f'{subject}.ivar.consensus')
+
+    primers_bed = 'primers.bed' if no_ncov else 'nCoV-2019.bed'
+    primers_pairinfo = 'pairinfo.tsv' if no_ncov else 'nCoV-2019.tsv'
+
     run(f'bwa index {fasta}', params)
     run_string: str = f'fastp -i {read1} -I {read2} -o {r1_fastp} -O {r2_fastp}' + (' -D' if dedup else '') + f' --trim_front1 {trim_front_tail} --trim_tail1 {trim_front_tail} -l 25 -w {threads} -h {sub_dir_fastp} 2>/dev/null'
     run(run_string, params)
     run(f'bwa mem -t 8 {fasta} {r1_fastp} {r2_fastp} | samtools sort -o {raw_bam}', params)
     run(f'samtools view -F 2048 -b -o {bam} {raw_bam}', params)
-    run(f'ivar trim -m {read_cutoff_bp} -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.scheme.bed -p {trimmed} -i {bam} -e', params)
+    run(f'ivar trim -m {read_cutoff_bp} -b {ivar_dir}/primers_{primers_bp}bp/{primers_bed} -p {trimmed} -i {bam} -e', params)
     run(f'samtools sort {trimmed}.bam -o {trimmed_sorted}', params)
 
     # call variants with ivar (produces {subject}.variants.tsv)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_sorted} | ' +
         f'ivar variants -p {variants} -q 20 -t {variant_frequency} -r {fasta} ' +
-        f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
+        f'-g {ivar_dir}/{ivar_gff}', params)
     
     # remove low quality insertions because we want to ignore most mismatches
     # to primers that are insertions (produces {subject}.noins.variants.tsv)
     run(f"awk \'! (\\$4 ~ /^\\+/ && \\$10 >= 20) {{ print }}\' < {variants}.tsv > {noinsertions}.tsv", params)
     
     # get primers with mismatches to reference (produces {subject}.masked.txt)
-    run(f'ivar getmasked -i {noinsertions}.tsv -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.bed ' +
-        f'-f {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.tsv -p {masked}', params)
+    run(f'ivar getmasked -i {noinsertions}.tsv -b {ivar_dir}/primers_{primers_bp}bp/{primers_bed} ' +
+        f'-f {ivar_dir}/primers_{primers_bp}bp/{primers_pairinfo} -p {masked}', params)
     
     # remove reads with primer mismatches (produces {subject}.trimmed.masked.bam)
     run(f'ivar removereads -i {trimmed_sorted} -p {trimmed_masked} ' +
-        f'-t {masked} -b {ivar_dir}/primers_{primers_bp}bp/nCoV-2019.bed', params)
+        f'-t {masked} -b {ivar_dir}/primers_{primers_bp}bp/{primers_bed}', params)
     
     # call variants with reads with primer mismatches removed (produces {subject}.final.masked.variants.tsv)
     run(f'samtools mpileup -aa -A -d 0 -B -Q 0 {trimmed_masked} | ' +
         f'ivar variants -p {final_masked} -q 20 -t {variant_frequency} -r {fasta} ' +
-        f'-g {ivar_dir}/GCF_009858895.2_ASM985889v3_genomic.gff', params)
+        f'-g {ivar_dir}/{ivar_gff}', params)
     smart_copy(tsv, output_tsv)
 
     # convert ivar output to vcf (produces {subject}.final.masked.variants.vcf)
@@ -132,7 +141,7 @@ Arguments:
     i_vcf_s2 = join(output_dir, f'{subject}.ivar.snpEFF.vcf')
     i_vcf_s3 = join(output_dir, f'{subject}.ivar.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {output_vcf} > {i_vcf_s1}', params)
-    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 -noStats {i_vcf_s1} > {i_vcf_s2}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar {ivar_ref} -noStats {i_vcf_s1} > {i_vcf_s2}', params)
     run(f'cat {i_vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT "GEN[0].ALT_FREQ" DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" ' +
@@ -159,7 +168,7 @@ Arguments:
     vcf_s2 = join(output_dir, f'{subject}.ivar.lofreq.snpEFF.vcf')
     vcf_s3 = join(output_dir, f'{subject}.ivar.lofreq.snpSIFT.txt')
     run(f'sed "s/MN908947.3/NC_045512.2/g" {vcf_s0} > {vcf_s1}', params)
-    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar NC_045512.2 {vcf_s1} > {vcf_s2}', params)
+    run(f'java -Xmx8g -jar /opt/snpEff/snpEff.jar {ivar_ref} {vcf_s1} > {vcf_s2}', params)
     run(f'cat {vcf_s2} | /opt/snpEff/scripts/vcfEffOnePerLine.pl | java -jar /opt/snpEff/SnpSift.jar ' +
         f' extractFields - CHROM POS REF ALT AF DP "ANN[*].IMPACT" "ANN[*].FEATUREID" "ANN[*].EFFECT" ' +
         f' "ANN[*].HGVS_C" "ANN[*].HGVS_P" "ANN[*].CDNA_POS" "ANN[*].AA_POS" "ANN[*].GENE" > {vcf_s3}', params)

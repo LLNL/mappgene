@@ -1,0 +1,7 @@
+##gff-version 3
+#!gff-spec-version 1.21
+#!processor NCBI annotwriter
+##sequence-region KU955593.1 1 10807
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=64320
+KU955593.1	Genbank	region	1	10807	.	+	.	ID=KU955593.1:1..10807;Dbxref=taxon:64320;collection-date=2010;country=Cambodia;gbkey=Src;genome=genomic;isolate=Zika virus/H.sapiens-tc/KHM/2010/FSS13025;mol_type=genomic RNA;nat-host=Homo sapiens;note=passage history: Vero African green monkey kidney cells 1 time;serogroup=Spondweni
+KU955593.1	Genbank	CDS	108	10379	.	+	0	ID=cds-AMR39834.1;Dbxref=NCBI_GP:AMR39834.1;Name=AMR39834.1;gbkey=CDS;product=polyprotein;protein_id=AMR39834.1
