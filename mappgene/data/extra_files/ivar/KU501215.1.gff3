@@ -1,0 +1,7 @@
+##gff-version 3
+#!gff-spec-version 1.21
+#!processor NCBI annotwriter
+##sequence-region KU501215.1 1 10675
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=64320
+KU501215.1	Genbank	region	1	10675	.	+	.	ID=KU501215.1:1..10675;Dbxref=taxon:64320;collection-date=01-Dec-2015;country=Puerto Rico;gbkey=Src;genome=genomic;mol_type=genomic RNA;nat-host=Homo sapiens;strain=PRVABC59
+KU501215.1	Genbank	CDS	107	10378	.	+	0	ID=cds-AMC13911.1;Dbxref=NCBI_GP:AMC13911.1;Name=AMC13911.1;gbkey=CDS;product=polyprotein;protein_id=AMC13911.1
