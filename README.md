@@ -98,17 +98,17 @@ when preparing mappgene runs, especially if copy-pasting from old batch scripts.
 Ivar uses `--reference_accession`, `--gff`, and `--primers_bp` as noted above.
 The snpEff step uses `--reference_accession` to derive the refernece genome's database name.
 
-Virus       | Reference Accession   | GFF                                     | Primers                         | Notes
-============|=======================|=========================================|=================================|===========================================================================
-Sars-CoV-2  | NC_045512.2           | GCF_009858895.2_ASM985889v3_genomic.gff | 1200                            | "Midnight" 1200bp amplicon primers
-            |                       |                                         | 400                             | V3 400bp ARTIC primers
-            |                       |                                         | v4                              | V4 ARTIC primers
-            |                       |                                         | v4.1                            | V4 ARTIC primers (Omicron)
-            |                       |                                         | combo_3_4.1                     | V3 + V4.1 primers
-Zika        | KU501215.1            | KU501215.1.gff3                         | zibra_KU501215.1                | Zibra primers mapped to PRVABC59
-            | KX087101.3            | KX087101.3.gff3                         | zibra_KX087101.3                | Zibra primers mapped to PRVABC59 (Used in Grubaugh et al., 2019)
-            | KU955593.1            | KU955593.1.gff3                         | zibra_KU955593.1                | Zibra primers mapped to FSS13025 (Cambodia)
-            | KJ776791.2            | KJ776791.2.gff3                         | zibra_KJ776791.2                | Zibra primers mapped to French Polynesia 2013 (Used in Theys et al., 2017)
+| Virus       | `--reference_accession` | `--gff`                                   | `--primers_bp`                    | Notes                                                                       |
+| ----------- | ----------------------- | ----------------------------------------- | --------------------------------- | --------------------------------------------------------------------------- |
+| Sars-CoV-2  | `NC_045512.2`           | `GCF_009858895.2_ASM985889v3_genomic.gff` | `1200`                            | "Midnight" 1200bp amplicon primers                                          |
+|             |                         |                                           | `400`                             | V3 400bp ARTIC primers                                                      |
+|             |                         |                                           | `v4`                              | V4 ARTIC primers                                                            |
+|             |                         |                                           | `v4.1`                            | V4 ARTIC primers (Omicron)                                                  |
+|             |                         |                                           | `combo_3_4.1`                     | V3 + V4.1 primers                                                           |
+| Zika        | `KU501215.1`            | `KU501215.1.gff3`                         | `zibra_KU501215.1`                | Zibra primers mapped to PRVABC59                                            |
+|             | `KX087101.3`            | `KX087101.3.gff3`                         | `zibra_KX087101.3`                | Zibra primers mapped to PRVABC59 (Used in Grubaugh et al., 2019)            |
+|             | `KU955593.1`            | `KU955593.1.gff3`                         | `zibra_KU955593.1`                | Zibra primers mapped to FSS13025 (Cambodia)                                 |
+|             | `KJ776791.2`            | `KJ776791.2.gff3`                         | `zibra_KJ776791.2`                | Zibra primers mapped to French Polynesia 2013 (Used in Theys et al., 2017)  |
 
 ### Process multiple samples in parallel
 
