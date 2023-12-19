@@ -109,6 +109,8 @@ The snpEff step uses `--reference_accession` to derive the refernece genome's da
 |             | `KX087101.3`            | `KX087101.3.gff3`                         | `zibra_KX087101.3`                | Zibra primers mapped to PRVABC59 (Used in Grubaugh et al., 2019)            |
 |             | `KU955593.1`            | `KU955593.1.gff3`                         | `zibra_KU955593.1`                | Zibra primers mapped to FSS13025 (Cambodia)                                 |
 |             | `KJ776791.2`            | `KJ776791.2.gff3`                         | `zibra_KJ776791.2`                | Zibra primers mapped to French Polynesia 2013 (Used in Theys et al., 2017)  |
+|             | `KU501215.1`            | `KU501215.1.gff3`                         | `m1000_KU501215.1`                | M1000 primers mapped to PRVABC59                                            |
+|             | `KU955593.1`            | `KU955593.1.gff3`                         | `m1000_KU955593.1`                | M1000 primers mapped to FSS13025 (Cambodia)                                 |
 
 ### Process multiple samples in parallel
 
