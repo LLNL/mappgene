@@ -43,7 +43,7 @@ map_zibra_primers(){
     awk -v OFS=$'\t' '{
                           gsub(/plus/, "+", $5);
                           gsub(/minus/, "-", $5);
-                          print $1, $2, $3, $4, "0", $5, $6
+                          print $1, $2-1, $3, $4, "0", $5, $6
                       }' < blast.tsv \
     | sort -nk2 > primers.bed
     sort -Vk4 primers.bed \
