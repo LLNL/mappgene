@@ -42,7 +42,7 @@ def parse_args(args):
     parser.add_argument('--read_cutoff_bp', default=30,
         help='iVar: keep reads greater than this number of base pairs.')
 
-    parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 'v4', 'v4.1', 'combo_3_4.1', 'zibra_KU501215.1', 'zibra_KU955593.1', 'zibra_KX087101.3', 'zibra_KJ776791.2', 400, 1200},
+    parser.add_argument('--primers_bp', default=400, choices={'400', '1200', 'v4', 'v4.1', 'combo_3_4.1', 'v5.3.2', 'zibra_KU501215.1', 'zibra_KU955593.1', 'zibra_KX087101.3', 'zibra_KJ776791.2', 400, 1200},
         help='iVar: use primer files with this number of base pairs.')
 
     parser.add_argument('--depth_cap', default='3e5',

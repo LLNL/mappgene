@@ -105,6 +105,7 @@ The snpEff step uses `--reference_accession` to derive the refernece genome's da
 |             |                         |                                           | `v4`                              | V4 ARTIC primers                                                            |
 |             |                         |                                           | `v4.1`                            | V4 ARTIC primers (Omicron)                                                  |
 |             |                         |                                           | `combo_3_4.1`                     | V3 + V4.1 primers                                                           |
+|             |                         |                                           | `v5.3.2`                          | V5.3.2 ARTIC primers (Omicron sublineages)                                  |
 | Zika        | `KU501215.1`            | `KU501215.1.gff3`                         | `zibra_KU501215.1`                | Zibra primers mapped to PRVABC59                                            |
 |             | `KX087101.3`            | `KX087101.3.gff3`                         | `zibra_KX087101.3`                | Zibra primers mapped to PRVABC59 (Used in Grubaugh et al., 2019)            |
 |             | `KU955593.1`            | `KU955593.1.gff3`                         | `zibra_KU955593.1`                | Zibra primers mapped to FSS13025 (Cambodia)                                 |
