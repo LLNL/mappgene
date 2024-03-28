@@ -5,15 +5,7 @@ if ! which makeblastdb > /dev/null; then
     exit 1
 fi
 
-# if ! parallel --version | grep -q -s GNU ; then
-#     echo "Needs GNU parallel"
-#     exit 2
-# fi
-
-# parallel --skip-first-line --colsep $'\t' \
-#     "echo -e '>{1}\n{2}\n'" \
-#     < Primers\ for\ amplicon-based\ sequencing\ -\ ZIKV\ -\ Asia_America\ -\ 400bp.tsv \
-#     > zibra.fa
+# awk '{printf(">%s\n%s\n", $4, $7)}' < M1000\ Sequencing\ primers.txt > M1000.fa
 
 map_primers(){
     local _ref="$1"
@@ -31,12 +23,12 @@ map_primers(){
         -outfmt "6 sseqid sstart send qseqid sstrand qseq qlen length evalue pident qcovs"
 }
 
-map_zibra_primers(){
+map_m1000_primers(){
     local _acc="$1"
-    local _primers_dir="primers_zibra_${_acc}bp"
+    local _primers_dir="primers_m1000_${_acc}bp"
 
     mkdir -p "$_primers_dir"
-    map_primers "references/${_acc}.fasta" zibra.fa > "${_primers_dir}/blast.tsv"
+    map_primers "references/${_acc}.fasta" M1000.fa > "${_primers_dir}/blast.tsv"
 
     # drop score columns and add dummy pool numbers (0)
     cd "$_primers_dir" || return 1
@@ -52,7 +44,5 @@ map_zibra_primers(){
     cd - || return 1
 }
 
-map_zibra_primers KU501215.1
-map_zibra_primers KU955593.1
-map_zibra_primers KX087101.3
-map_zibra_primers KJ776791.2
+map_m1000_primers KU501215.1  # PRV-ABC
+map_m1000_primers KU955593.1  # CAMBODIAN
